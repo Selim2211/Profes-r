@@ -770,4 +770,5 @@ Bu dosyadaki bir kararı değiştirmek gerekirse, kullanıcının onayından son
 | Tarih | Karar | Gerekçe | Onaylayan |
 |---|---|---|---|
 | 2026-10-19 | Bulut API (Gemini) varsayılan sağlayıcı, AI SDK ile soyutlanmış | Her cihazdan erişim, düşük maliyet, ileride Claude'a kolay geçiş | Kullanıcı |
+| 2026-10-19 | Geçici olarak `AI_PROVIDER=google` (Gemini: `gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-embedding-001`, 768 boyut); OpenRouter okul ağında SNI ile engelli, ağ açılınca `AI_PROVIDER=openrouter`'a dönülebilir | `openrouter.ai` bu ağdan ECONNRESET veriyor | Kullanıcı |
 | 2026-10-19 | Varsayılan sağlayıcı OpenRouter (`@openrouter/ai-sdk-provider`, ücretsiz modeller, `openrouter/free`); Gemini `AI_PROVIDER=google` ile hâlâ seçilebilir | Kullanıcının elindeki anahtar OpenRouter, ücretsiz kullanım istendi | Kullanıcı |

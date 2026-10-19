@@ -20,7 +20,11 @@ function providerName(): "openrouter" | "google" {
 }
 
 function openrouter() {
-  return createOpenRouter({ apiKey: requireEnv("OPENROUTER_API_KEY") });
+  return createOpenRouter({
+    apiKey: requireEnv("OPENROUTER_API_KEY"),
+    // Optional: route through a proxy when openrouter.ai is unreachable from the network.
+    baseURL: process.env.OPENROUTER_BASE_URL || undefined,
+  });
 }
 
 function google() {

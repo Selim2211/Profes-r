@@ -37,7 +37,11 @@ export async function CourseDocuments({ courseId }: { courseId: string }) {
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">Notlar</h2>
-        <Button render={<Link href={`/courses/${courseId}/upload`} />} className="min-h-11">
+        <Button
+          nativeButton={false}
+          render={<Link href={`/courses/${courseId}/upload`} />}
+          className="min-h-11"
+        >
           Not yükle
         </Button>
       </div>
