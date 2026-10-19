@@ -3,6 +3,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { citationLabel, searchNotes, toCitation, type Citation } from "@/lib/rag/search";
 import { getWeekContent } from "@/lib/rag/week";
+import { getSavedWeekSummary } from "@/lib/summary/saved";
 
 export type ToolContext = {
   supabase: SupabaseClient;
@@ -54,15 +55,29 @@ export function createTools(ctx: ToolContext) {
       inputSchema: z.object({
         week: z.number().int().min(1).max(52).describe("Hafta numarası"),
         courseId: z.string().uuid().optional().describe("Ders kimliği; sohbet bir derse bağlı değilse kullan"),
+        level: z
+          .enum(["short", "standard", "detailed"])
+          .optional()
+          .describe("Kayıtlı özetin seviyesi: öğrenci 'kısa özet' isterse short, 'detaylı' isterse detailed"),
       }),
-      execute: async ({ week, courseId }) => {
+      execute: async ({ week, courseId, level }) => {
         const effectiveCourse = ctx.courseId ?? courseId;
         if (!effectiveCourse) {
           return { hata: "Hangi dersin haftası olduğu belli değil. Öğrenciye hangi dersi kastettiğini sor." };
         }
 
+        // A saved summary is generated, checked for coverage and verified against the notes: prefer it.
+        const saved = await getSavedWeekSummary(ctx.supabase, effectiveCourse, week, level);
+        if (saved) {
+          return {
+            hafta: week,
+            kayitliOzet: { seviye: saved.level, versiyon: saved.version, metin: saved.contentMd },
+          };
+        }
+
         const content = await getWeekContent(ctx.supabase, effectiveCourse, week);
         if (!content) return { hata: `Bu derste ${week}. hafta için yüklenmiş not yok.` };
+        const courseLink = `/courses/${effectiveCourse}`;
 
         for (const chunk of content.chunks) {
           ctx.citations.set(chunk.id, {
@@ -75,6 +90,8 @@ export function createTools(ctx: ToolContext) {
 
         return {
           hafta: content.week,
+          kayitliOzet: null,
+          ozetSayfasi: courseLink,
           baslik: content.title,
           ozet: content.summary,
           konular: content.topics,
