@@ -128,3 +128,30 @@
     @apply font-sans;
   }
 }
+
+/* "PDF olarak kaydet": the browser's print dialog saves the page as PDF. Navigation and controls are
+   hidden with the print: variant; here we only set the page and keep tables/headings together. */
+@media print {
+  @page {
+    margin: 16mm;
+  }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  table,
+  li,
+  blockquote {
+    break-inside: avoid;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}

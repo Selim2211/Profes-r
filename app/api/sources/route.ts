@@ -7,6 +7,8 @@ const querySchema = z
   .object({
     conversationId: z.string().uuid().nullable(),
     courseId: z.string().uuid().nullable(),
+    // Optional: only look in this document (a document summary must not cite another upload).
+    documentId: z.string().uuid().nullable(),
     week: z.coerce.number().int().min(1).max(52).nullable(),
     page: z.coerce.number().int().min(1),
   })
@@ -24,6 +26,7 @@ export async function GET(request: Request) {
   const parsed = querySchema.safeParse({
     conversationId: params.get("conversationId"),
     courseId: params.get("courseId"),
+    documentId: params.get("documentId"),
     week: params.get("week") || null,
     page: params.get("page"),
   });
@@ -64,9 +67,11 @@ export async function GET(request: Request) {
   if (known) {
     chunkQuery = chunkQuery.eq("id", known.chunk_id);
   } else {
-    chunkQuery = chunkQuery.lte("page_start", page).gte("page_end", page);
+    // Chunks overlap, so several can cover the page: prefer the one that starts closest to it.
+    chunkQuery = chunkQuery.lte("page_start", page).gte("page_end", page).order("page_start", { ascending: false });
     chunkQuery = week === null ? chunkQuery.is("week_number", null) : chunkQuery.eq("week_number", week);
     if (courseId) chunkQuery = chunkQuery.eq("course_id", courseId);
+    if (parsed.data.documentId) chunkQuery = chunkQuery.eq("document_id", parsed.data.documentId);
   }
 
   const { data: chunk } = await chunkQuery.maybeSingle();
@@ -85,7 +90,7 @@ export async function GET(request: Request) {
       .createSignedUrl(doc.storage_path, SIGNED_URL_SECONDS);
     if (signed?.signedUrl) {
       fileUrl = doc.storage_path.toLowerCase().endsWith(".pdf")
-        ? `${signed.signedUrl}#page=${chunk.page_start}`
+        ? `${signed.signedUrl}#page=${page}` // the page the badge names, not where the chunk starts
         : signed.signedUrl;
     }
   }

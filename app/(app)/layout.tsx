@@ -11,7 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SideNav />
       </Suspense>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b px-4 py-2 md:justify-end">
+        <header className="flex items-center justify-between border-b px-4 py-2 md:justify-end print:hidden">
           <span className="font-semibold md:hidden">Profesör</span>
           <form action={signOut}>
             <Button type="submit" variant="ghost" size="sm" className="min-h-11">
@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Button>
           </form>
         </header>
-        <main className="mx-auto w-full max-w-3xl flex-1 p-4 pb-24 md:pb-6">
+        <main className="mx-auto w-full max-w-3xl flex-1 p-4 pb-24 md:pb-6 print:max-w-none print:p-0">
           <Suspense fallback={<p className="text-sm text-muted-foreground">Yükleniyor...</p>}>
             {children}
           </Suspense>

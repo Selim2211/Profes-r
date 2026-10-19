@@ -9,10 +9,13 @@ export type SummaryProgress = {
   summaryId: string | null;
 };
 
-export type SummaryTarget = { courseId: string; level: SummaryLevel } & (
+// What a summary is about: one document, or all documents of a week.
+export type SummaryScopeTarget = { courseId: string } & (
   | { scope: "document"; documentId: string }
   | { scope: "week"; weekNumber: number }
 );
+
+export type SummaryTarget = SummaryScopeTarget & { level: SummaryLevel };
 
 // Browser-side driver: starts (or resumes) the job and keeps calling the slice endpoint until it is
 // done or failed, reporting progress after every slice.

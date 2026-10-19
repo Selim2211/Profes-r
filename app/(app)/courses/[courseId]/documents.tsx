@@ -1,8 +1,10 @@
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { DocumentRow } from "@/components/course/document-row";
+import { SummaryLauncher } from "@/components/summary/summary-launcher";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import type { SummaryLevel } from "@/lib/summary/template";
 
 async function deleteDocument(documentId: string, courseId: string) {
   "use server";
@@ -27,6 +29,22 @@ export async function CourseDocuments({ courseId }: { courseId: string }) {
     .eq("course_id", courseId)
     .order("week_number", { ascending: true, nullsFirst: false })
     .order("created_at");
+
+  const { data: summaries } = await supabase
+    .from("summaries")
+    .select("id, scope, document_id, week_number, level, version")
+    .eq("course_id", courseId)
+    .eq("status", "ready")
+    .order("version", { ascending: false });
+
+  // Latest ready summary per level for one document or week (rows come newest version first).
+  const latestByLevel = (match: (s: NonNullable<typeof summaries>[number]) => boolean) => {
+    const result: Partial<Record<SummaryLevel, { id: string; version: number }>> = {};
+    for (const s of summaries ?? []) {
+      if (match(s) && !result[s.level as SummaryLevel]) result[s.level as SummaryLevel] = { id: s.id, version: s.version };
+    }
+    return result;
+  };
 
   const groups = new Map<number | null, NonNullable<typeof documents>>();
   for (const doc of documents ?? []) {
@@ -65,6 +83,15 @@ export async function CourseDocuments({ courseId }: { courseId: string }) {
               </Link>
             )}
           </div>
+          {week !== null && docs.some((d) => d.status === "ready") && (
+            <div className="rounded-lg border p-3">
+              <p className="mb-2 text-sm font-medium">{week}. hafta özeti (tüm dokümanlar birlikte)</p>
+              <SummaryLauncher
+                target={{ scope: "week", courseId, weekNumber: week }}
+                existing={latestByLevel((s) => s.scope === "week" && s.week_number === week)}
+              />
+            </div>
+          )}
           <ul className="space-y-2">
             {docs.map((doc) => (
               <DocumentRow
@@ -75,6 +102,14 @@ export async function CourseDocuments({ courseId }: { courseId: string }) {
                 error={doc.error}
                 pageCount={doc.page_count}
                 deleteAction={deleteDocument.bind(null, doc.id, courseId)}
+                extra={
+                  doc.status === "ready" ? (
+                    <SummaryLauncher
+                      target={{ scope: "document", courseId, documentId: doc.id }}
+                      existing={latestByLevel((s) => s.scope === "document" && s.document_id === doc.id)}
+                    />
+                  ) : null
+                }
               />
             ))}
           </ul>

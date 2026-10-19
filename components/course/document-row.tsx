@@ -12,6 +12,8 @@ type Props = {
   error: string | null;
   pageCount: number | null;
   deleteAction: () => Promise<void>;
+  // Extra controls shown under the row (e.g. the summary launcher), rendered by the server.
+  extra?: React.ReactNode;
 };
 
 const STATUS_LABELS = {
@@ -21,7 +23,7 @@ const STATUS_LABELS = {
   failed: "Başarısız",
 } as const;
 
-export function DocumentRow({ id, title, status, error, pageCount, deleteAction }: Props) {
+export function DocumentRow({ id, title, status, error, pageCount, deleteAction, extra }: Props) {
   const router = useRouter();
   const [progress, setProgress] = useState<{ label: string; value: number } | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -102,6 +104,7 @@ export function DocumentRow({ id, title, status, error, pageCount, deleteAction 
         </div>
       )}
       {shownError && !progress && <p className="text-sm text-destructive">{shownError}</p>}
+      {extra && <div className="border-t pt-2">{extra}</div>}
     </li>
   );
 }

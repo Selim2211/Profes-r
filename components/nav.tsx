@@ -19,7 +19,7 @@ function isActive(pathname: string, href: string) {
 export function SideNav() {
   const pathname = usePathname();
   return (
-    <nav className="hidden w-56 shrink-0 flex-col gap-1 border-r p-3 md:flex">
+    <nav className="hidden w-56 shrink-0 flex-col gap-1 border-r p-3 md:flex print:hidden">
       <div className="px-3 py-2 text-lg font-semibold">Profesör</div>
       {items.map(({ href, label, icon: Icon }) => (
         <Link
@@ -41,7 +41,7 @@ export function SideNav() {
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-4 border-t bg-background md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-4 border-t bg-background md:hidden print:hidden">
       {items.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
