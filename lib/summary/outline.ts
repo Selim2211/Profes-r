@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateStructured } from "@/lib/ai/structured";
 import { fastModel } from "@/lib/ai/models";
 import { OUTLINE_PROMPT } from "@/lib/ai/prompts";
 import { outlineSchema } from "@/lib/ai/schemas";
@@ -29,7 +29,7 @@ export type OutlineGenerator = (pages: PageText[]) => Promise<OutlineEntry[]>;
 
 // Fast-model fallback for notes without headings.
 export const generateOutline: OutlineGenerator = async (pages) => {
-  const { object } = await generateObject({
+  const object = await generateStructured({
     model: fastModel(),
     schema: outlineSchema,
     system: OUTLINE_PROMPT,

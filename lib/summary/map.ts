@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { generateObject } from "ai";
+import { generateStructured } from "@/lib/ai/structured";
 import { fastModel } from "@/lib/ai/models";
 import { MAP_PROMPT, MAP_PROMPT_VERSION } from "@/lib/ai/prompts";
 import { sectionNotesSchema, type SectionNotes } from "@/lib/ai/schemas";
@@ -76,7 +76,7 @@ const MIN_TOKENS_EXPECTING_NOTES = 120;
 export function createSectionMapper(courseName: string): SectionMapper {
   return async (section) => {
     const notes = await withRetry(async () => {
-      const { object } = await generateObject({
+      const object = await generateStructured({
         model: fastModel(),
         schema: sectionNotesSchema,
         system: MAP_PROMPT,

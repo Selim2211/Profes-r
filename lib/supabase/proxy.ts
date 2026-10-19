@@ -1,9 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-function canAutoLogin(): boolean {
+// Only for a local machine: never on Vercel and only when the request really comes from localhost,
+// so `npm run fast` (a production build run locally) can skip the login screen too.
+function canAutoLogin(request: NextRequest): boolean {
+  const host = request.nextUrl.hostname;
   return (
-    process.env.NODE_ENV !== "production" &&
+    !process.env.VERCEL &&
+    (host === "localhost" || host === "127.0.0.1") &&
     process.env.LOCAL_AUTO_LOGIN === "true" &&
     Boolean(process.env.LOCAL_AUTO_LOGIN_EMAIL) &&
     Boolean(process.env.LOCAL_AUTO_LOGIN_PASSWORD)
@@ -39,8 +43,8 @@ export async function updateSession(request: NextRequest) {
   let isLoggedIn = Boolean(data?.claims);
 
   // Local development only: sign in automatically so the login screen can be skipped.
-  // Never active in production builds.
-  if (!isLoggedIn && canAutoLogin()) {
+  // Never active on Vercel or for non-localhost hosts.
+  if (!isLoggedIn && canAutoLogin(request)) {
     const { error } = await supabase.auth.signInWithPassword({
       email: process.env.LOCAL_AUTO_LOGIN_EMAIL!,
       password: process.env.LOCAL_AUTO_LOGIN_PASSWORD!,

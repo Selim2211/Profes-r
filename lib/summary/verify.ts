@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateObject } from "ai";
+import { generateStructured } from "@/lib/ai/structured";
 import { judgeModel } from "@/lib/ai/models";
 import { CLAIM_JUDGE_PROMPT } from "@/lib/ai/prompts";
 import { claimJudgeSchema } from "@/lib/ai/schemas";
@@ -276,8 +276,8 @@ export function buildJudgePrompt(claims: Claim[], evidence: Evidence[][]): strin
 
 export const modelJudge: VerifyDeps["judge"] = async (claims, evidence) => {
   const prompt = buildJudgePrompt(claims, evidence);
-  const { object } = await withRetry(() =>
-    generateObject({
+  const object = await withRetry(() =>
+    generateStructured({
       model: judgeModel(),
       schema: claimJudgeSchema,
       system: CLAIM_JUDGE_PROMPT,

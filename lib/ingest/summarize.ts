@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateStructured } from "@/lib/ai/structured";
 import { fastModel } from "@/lib/ai/models";
 import { WEEK_SUMMARY_PROMPT } from "@/lib/ai/prompts";
 import { weekSummarySchema, type WeekSummary } from "@/lib/ai/schemas";
@@ -21,7 +21,7 @@ export async function summarizeWeek(input: {
   chunkTexts: string[];
 }): Promise<WeekSummary> {
   const notes = fitToBudget(input.chunkTexts);
-  const { object } = await generateObject({
+  const object = await generateStructured({
     model: fastModel(),
     schema: weekSummarySchema,
     system: WEEK_SUMMARY_PROMPT,

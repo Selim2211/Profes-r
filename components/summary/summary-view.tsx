@@ -121,10 +121,10 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
     <article className="space-y-5">
       <header className="space-y-2">
         <Link
-          href={`/courses/${courseId}`}
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline print:hidden"
+          href={summary.scope === "week" ? `/courses/${courseId}/week/${summary.weekNumber}` : `/courses/${courseId}`}
+          className="inline-flex h-9 items-center text-sm text-muted-foreground hover:text-foreground print:hidden"
         >
-          ← Derse dön
+          ← {summary.scope === "week" ? "Haftaya dön" : "Derse dön"}
         </Link>
         <h1 className="text-2xl font-semibold">{title}</h1>
         <p className="text-sm text-muted-foreground">
@@ -154,9 +154,9 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
       </div>
 
       {summary.verification?.unverified && (
-        <p className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm print:hidden">
-          Bu özet notlara karşı iddia iddia doğrulanmadı (doğrulama kapalıydı). Kaynak etiketleri notlardan alınan
-          sayfa numaralarıdır; kesinlik için &quot;Yeniden üret&quot; ile doğrulamalı üretebilirsin.
+        <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground print:hidden">
+          Bu özet doğrudan notlarından hazırlandı; iddia iddia doğrulama yapılmadı. Kaynak etiketleri notlardaki sayfa
+          numaralarıdır. İstersen &quot;Yeniden üret&quot; altındaki Gelişmiş bölümünden doğrulamalı üretebilirsin.
         </p>
       )}
 
@@ -241,7 +241,7 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
           </div>
         </section>
       ) : (
-        <div className="max-w-none text-base leading-8">
+        <div className="max-w-none rounded-3xl bg-card p-5 text-base leading-8 shadow-sm ring-1 ring-border md:p-8 print:rounded-none print:p-0 print:shadow-none print:ring-0">
           <Markdown content={summary.contentMd} onCitationClick={openSource} />
         </div>
       )}

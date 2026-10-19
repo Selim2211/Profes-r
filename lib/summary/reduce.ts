@@ -1,4 +1,5 @@
-import { generateObject, generateText } from "ai";
+import { generateText } from "ai";
+import { generateStructured } from "@/lib/ai/structured";
 import { chatModel, fastModel } from "@/lib/ai/models";
 import { MERGE_NOTES_PROMPT, REDUCE_PROMPT } from "@/lib/ai/prompts";
 import { sectionNotesSchema, type SectionNotes } from "@/lib/ai/schemas";
@@ -31,8 +32,8 @@ export type ReduceResult = {
 
 export const modelDeps: ReduceDeps = {
   async mergeGroup(group, tagFor) {
-    const { object } = await withRetry(() =>
-      generateObject({
+    const object = await withRetry(() =>
+      generateStructured({
         model: fastModel(),
         schema: sectionNotesSchema,
         system: MERGE_NOTES_PROMPT,

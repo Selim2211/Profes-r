@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateStructured } from "@/lib/ai/structured";
 import { chatModel } from "@/lib/ai/models";
 import { COVERAGE_JUDGE_PROMPT, COVERAGE_SUPPLEMENT_PROMPT } from "@/lib/ai/prompts";
 import { additionsSchema, coverageJudgeSchema } from "@/lib/ai/schemas";
@@ -181,8 +181,8 @@ export function applyAdditions(markdown: string, additions: Addition[]): string 
 export const modelCoverageDeps: CoverageDeps = {
   async judge(summaryMd, items) {
     const list = items.map((i) => `${i.id}. ${i.text}`).join("\n");
-    const { object } = await withRetry(() =>
-      generateObject({
+    const object = await withRetry(() =>
+      generateStructured({
         model: chatModel(), // a sloppy judge marks everything as covered, so the stronger model is used
         schema: coverageJudgeSchema,
         system: COVERAGE_JUDGE_PROMPT,
@@ -201,8 +201,8 @@ export const modelCoverageDeps: CoverageDeps = {
 
   async supplement(summaryMd, missing) {
     const list = missing.map((i) => `- ${i.text}`).join("\n");
-    const { object } = await withRetry(() =>
-      generateObject({
+    const object = await withRetry(() =>
+      generateStructured({
         model: chatModel(),
         schema: additionsSchema,
         system: COVERAGE_SUPPLEMENT_PROMPT,

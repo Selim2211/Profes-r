@@ -227,16 +227,25 @@ async function stepReduce(supabase: SupabaseClient, job: SummaryJob) {
     courseName: await courseName(supabase, job.course_id),
     scopeLabel,
   });
+  // Without the quality check (coverage + claim verification) the summary is finished right here:
+  // it is written straight from the notes and flagged so the page can say it was not checked.
+  const quick = !job.verify;
   const saved = await saveSummary(supabase, {
     ...scope,
     userId: job.user_id,
     level: job.level,
-    contentMd: result.contentMd,
+    contentMd: quick ? fillEmptySections(result.contentMd) : result.contentMd,
     model: process.env.AI_MODEL_CHAT ?? "",
-    status: "draft",
-    verification: { reduce: { rounds: result.rounds, groupMerges: result.groupMerges } },
+    status: quick ? "ready" : "draft",
+    verification: quick
+      ? { reduce: { rounds: result.rounds, groupMerges: result.groupMerges }, unverified: true }
+      : { reduce: { rounds: result.rounds, groupMerges: result.groupMerges } },
   });
   await setJob(supabase, job, { summary_id: saved.id });
+  if (quick) {
+    await setJob(supabase, job, { step: "done", progress: 100, cursor: {} });
+    return;
+  }
   await advance(supabase, job, "coverage");
 }
 
@@ -383,7 +392,7 @@ export async function startSummaryJob(supabase: SupabaseClient, input: StartInpu
       document_id: input.scope === "document" ? input.documentId : null,
       week_number: input.scope === "week" ? input.weekNumber : null,
       level: input.level,
-      verify: input.verify ?? true,
+      verify: input.verify ?? false,
     })
     .select("id")
     .single();
