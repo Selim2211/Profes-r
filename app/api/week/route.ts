@@ -2,6 +2,7 @@ import { streamText } from "ai";
 import { z } from "zod";
 import { runGuarded } from "@/lib/ai/guard";
 import { chatModel } from "@/lib/ai/models";
+import { textStreamResponse } from "@/lib/ai/stream";
 import { WEEK_LECTURE_PROMPT } from "@/lib/ai/prompts";
 import { formatWeekForPrompt, getWeekContent } from "@/lib/rag/week";
 import { createClient } from "@/lib/supabase/server";
@@ -33,6 +34,6 @@ export async function POST(request: Request) {
       system: WEEK_LECTURE_PROMPT,
       prompt: formatWeekForPrompt(content),
     });
-    return result.toTextStreamResponse();
+    return textStreamResponse(result);
   });
 }

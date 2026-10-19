@@ -2,6 +2,7 @@ import { isStepCount, streamText } from "ai";
 import { z } from "zod";
 import { runGuarded } from "@/lib/ai/guard";
 import { chatModel } from "@/lib/ai/models";
+import { textStreamResponse } from "@/lib/ai/stream";
 import { createTools, type ToolContext } from "@/lib/ai/tools";
 import { extractCitationRefs } from "@/lib/rag/citations";
 import { buildSystemPrompt, loadRecentMessages } from "@/lib/rag/context";
@@ -90,8 +91,16 @@ export async function POST(request: Request) {
     },
   });
 
-  return result.toTextStreamResponse({
+  return textStreamResponse(result, {
     headers: { "X-Conversation-Id": conversationId! },
+    // A failed answer is kept in the history too, so reopening the chat shows what happened.
+    onFailure: async (message) => {
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        role: "assistant",
+        content: `⚠️ ${message}`,
+      });
+    },
   });
   });
 }
