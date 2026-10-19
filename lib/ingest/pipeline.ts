@@ -88,7 +88,9 @@ async function runExtract(supabase: SupabaseClient, job: Job, doc: Doc) {
   let pages: PageText[];
 
   if (isPdfPath(doc.storage_path)) {
-    ({ totalPages, pages } = await extractPdfPages(bytes, from, to));
+    // pdf.js takes ownership of the buffer it parses and detaches it; pass a copy so the original
+    // bytes can still be sent to the vision model afterwards.
+    ({ totalPages, pages } = await extractPdfPages(bytes.slice(), from, to));
   } else {
     const all = splitTextIntoPages(new TextDecoder().decode(bytes));
     totalPages = all.length;
@@ -125,11 +127,13 @@ async function runExtract(supabase: SupabaseClient, job: Job, doc: Doc) {
   }
 
   let transcribed = new Map<number, string>();
+  let transcribeError: string | null = null;
   if (plan.size > 0) {
     try {
       transcribed = await transcribePages(bytes, [...plan.keys()]);
-    } catch {
-      // Best effort: the original text layer is kept; pages are marked as attempted below.
+    } catch (error) {
+      // Best effort: the original text layer is kept; the page rows record why it failed.
+      transcribeError = (error instanceof Error ? error.message : String(error)).slice(0, 160);
     }
   }
 
@@ -145,7 +149,11 @@ async function runExtract(supabase: SupabaseClient, job: Job, doc: Doc) {
           text: accepted ?? p.text,
           ocr_used: Boolean(planned?.empty && accepted),
           reextracted: Boolean(accepted),
-          reextract_reason: planned ? `${accepted ? "" : "failed:"}${planned.reasons.join(",")}` : null,
+          reextract_reason: planned
+            ? accepted
+              ? planned.reasons.join(",")
+              : `failed(${transcribeError ?? (transcribed.has(p.page) ? "rejected" : "missing")}):${planned.reasons.join(",")}`
+            : null,
         };
       }),
       { onConflict: "document_id,page_number" },
