@@ -25,7 +25,7 @@ export function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
-function headingOf(paragraph: string): string | null {
+export function headingOf(paragraph: string): string | null {
   const line = paragraph.trim();
   if (!line || line.includes("\n")) return null;
 

@@ -15,3 +15,15 @@ export const weekSummarySchema = z.object({
 });
 
 export type WeekSummary = z.infer<typeof weekSummarySchema>;
+
+export const outlineSchema = z.object({
+  sections: z
+    .array(
+      z.object({
+        title: z.string().describe("Bölümün kısa başlığı (notlardaki dilde)"),
+        startPage: z.number().int().describe("Bölümün başladığı sayfa numarası"),
+      }),
+    )
+    .min(1)
+    .max(40),
+});
