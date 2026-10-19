@@ -136,8 +136,10 @@ export function withTag(text: string, tag: string, kind: Claim["kind"]): string 
     const inner = core.slice(0, last).trimEnd();
     return `${inner} ${tag} |`;
   }
-  const punct = core.match(/[.!?:]$/)?.[0] ?? "";
-  const body = punct ? core.slice(0, -1) : core;
+  // A dangling comma/semicolon before the tag reads as a glitch ("... kapsar, [H1 · s.4].").
+  const trimmed = core.replace(/\s*[,;]+([.!?:]?)$/, "$1");
+  const punct = trimmed.match(/[.!?:]$/)?.[0] ?? (kind === "sentence" && trimmed !== core ? "." : "");
+  const body = /[.!?:]$/.test(trimmed) ? trimmed.slice(0, -1) : trimmed;
   return `${body.trimEnd()} ${tag}${punct}`;
 }
 

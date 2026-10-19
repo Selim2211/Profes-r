@@ -6,7 +6,7 @@ import { normalizeCitationTags } from "@/lib/rag/citations";
 import { withRetry } from "@/lib/utils/retry";
 import { normalizeNotes } from "./map";
 import { groupEntries, serializeEntries, totalTokens, type NoteEntry, type TagFor } from "./notes";
-import { LEVEL_INSTRUCTIONS, missingHeadings, type SummaryLevel } from "./template";
+import { LEVEL_INSTRUCTIONS, fillEmptySections, missingHeadings, type SummaryLevel } from "./template";
 
 // If the serialized notes fit this budget they are written up in one call; otherwise groups of
 // neighbouring sections are merged first (hierarchical reduce), repeating until they fit.
@@ -119,5 +119,5 @@ export async function reduceToSummary(args: {
     if (missing.length > 0) throw new Error(`Özet şablonu eksik kaldı: ${missing.join("; ")}`);
   }
 
-  return { contentMd, rounds, groupMerges };
+  return { contentMd: fillEmptySections(contentMd), rounds, groupMerges };
 }

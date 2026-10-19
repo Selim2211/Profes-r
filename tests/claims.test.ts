@@ -82,6 +82,11 @@ describe("tag helpers", () => {
     expect(withTag("Madde metni", "[H1 · s.5]", "item")).toBe("Madde metni [H1 · s.5]");
   });
 
+  it("drops a dangling comma before the tag", () => {
+    expect(withTag("Makalesini kapsar, [H1 · s.13].", "[H1 · s.13]", "sentence")).toBe("Makalesini kapsar [H1 · s.13].");
+    expect(withTag("Rekabet avantajı,", "[H1 · s.9]", "item")).toBe("Rekabet avantajı [H1 · s.9]");
+  });
+
   it("puts the tag inside the last cell of a table row", () => {
     expect(withTag("| **1950** | Ana bilgisayarlar [H1 · s.10] |", "[H1 · s.9]", "row")).toBe(
       "| **1950** | Ana bilgisayarlar [H1 · s.9] |",

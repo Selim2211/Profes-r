@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SectionNotes } from "@/lib/ai/schemas";
 import { groupEntries, makeTagFor, serializeEntry, type NoteEntry } from "@/lib/summary/notes";
 import { GROUP_BUDGET_TOKENS, reduceToSummary, type ReduceDeps } from "@/lib/summary/reduce";
-import { LEVEL_INSTRUCTIONS, SUMMARY_HEADINGS, TEMPLATE_TEXT, missingHeadings } from "@/lib/summary/template";
+import { LEVEL_INSTRUCTIONS, SUMMARY_HEADINGS, TEMPLATE_TEXT, fillEmptySections, missingHeadings } from "@/lib/summary/template";
 
 const tagFor = makeTagFor(3);
 
@@ -32,6 +32,23 @@ describe("template", () => {
     expect(missingHeadings(fullSummary)).toEqual([]);
     expect(missingHeadings("## GENEL BAKIŞ\n\n## 5. Örnekler")).toHaveLength(5);
     expect(missingHeadings("Genel bakış yazısı ama başlık değil")).toHaveLength(7);
+  });
+});
+
+describe("fillEmptySections", () => {
+  it("fills sections that have no body and leaves filled ones alone", () => {
+    const md = ["## 1. Genel bakış", "", "Metin.", "", "## 4. Formüller ve kurallar", "", "## 6. Sık yapılan hatalar / dikkat edilecekler", "", "## 7. Kendini kontrol et", ""].join("\n");
+    const out = fillEmptySections(md);
+
+    expect(out).toContain("## 4. Formüller ve kurallar\n\nNotlarda formül yok.");
+    expect(out).toContain("## 6. Sık yapılan hatalar / dikkat edilecekler\n\nNotlarda bu konuda özel bir uyarı yok.");
+    expect(out).toContain("## 7. Kendini kontrol et\n\nNotlarda bu bölüm için içerik yok.");
+    expect(out).toContain("## 1. Genel bakış\n\nMetin.");
+    expect(out.match(/Notlarda formül yok/g)).toHaveLength(1);
+  });
+
+  it("is a no-op for a complete summary", () => {
+    expect(fillEmptySections(fullSummary)).toBe(fullSummary);
   });
 });
 

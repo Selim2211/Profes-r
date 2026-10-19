@@ -44,17 +44,23 @@ export async function planDocumentSections(
   pages: PageText[],
   options: SectionOptions = {},
   outlineGenerator: OutlineGenerator = generateOutline,
-): Promise<{ sections: Section[]; usedOutline: boolean }> {
+): Promise<{ sections: Section[]; usedOutline: boolean; outline: OutlineEntry[] | null }> {
   const plan = planSectionsFromHeadings(pages, options);
-  if (!plan.needsOutline) return { sections: plan.sections, usedOutline: false };
+  if (!plan.needsOutline) return { sections: plan.sections, usedOutline: false, outline: null };
 
   try {
     const outline = normalizeOutline(await outlineGenerator(pages), pages);
     if (outline.length >= 2) {
-      return { sections: planSectionsFromOutline(pages, outline, options), usedOutline: true };
+      return { sections: planSectionsFromOutline(pages, outline, options), usedOutline: true, outline };
     }
   } catch {
     // Fall through to the size-based sections.
   }
-  return { sections: plan.sections, usedOutline: false };
+  return { sections: plan.sections, usedOutline: false, outline: null };
+}
+
+// Rebuilds the sections of an earlier plan. A model-made outline is not repeatable, so the job stores
+// it and passes it back here; without an outline the (deterministic) heading-based plan is used.
+export function replanSections(pages: PageText[], outline: OutlineEntry[] | null, options: SectionOptions = {}): Section[] {
+  return outline ? planSectionsFromOutline(pages, outline, options) : planSectionsFromHeadings(pages, options).sections;
 }
