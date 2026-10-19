@@ -8,10 +8,12 @@ import {
   isPdfPath,
   splitTextIntoPages,
 } from "./extract";
-import { ocrPages } from "./ocr";
+import { transcribePages } from "./ocr";
+import { detectTranscribeNeed, validateTranscription } from "./transcribe";
 import { summarizeWeek } from "./summarize";
 
-const EXTRACT_SLICE_PAGES = 10;
+// Small slices keep each request short: a slice may include one vision call over the whole PDF.
+const EXTRACT_SLICE_PAGES = 5;
 const EMBED_SLICE_CHUNKS = 24;
 const TOPICS_PER_CHUNK = 2;
 
@@ -36,6 +38,7 @@ type Doc = {
   title: string;
   storage_path: string;
   page_count: number | null;
+  transcribe_all: boolean;
 };
 
 export type JobView = {
@@ -107,29 +110,42 @@ async function runExtract(supabase: SupabaseClient, job: Job, doc: Doc) {
   const done = new Set((existing ?? []).map((p) => p.page_number));
   const todo = pages.filter((p) => !done.has(p.page));
 
-  const emptyPages = isPdfPath(doc.storage_path)
-    ? todo.filter((p) => p.text.trim().length < MIN_TEXT_CHARS).map((p) => p.page)
-    : [];
+  // Pages to read from the PDF image: no text layer (scans), or tables/formulas/diagrams whose
+  // text layer is unreliable. With transcribe_all every page goes through the vision model.
+  const isPdf = isPdfPath(doc.storage_path);
+  const plan = new Map<number, { empty: boolean; reasons: string[] }>();
+  if (isPdf) {
+    for (const p of todo) {
+      const empty = p.text.trim().length < MIN_TEXT_CHARS;
+      const need = detectTranscribeNeed(p.text);
+      if (empty || need.needed || doc.transcribe_all) {
+        plan.set(p.page, { empty, reasons: empty ? ["empty"] : need.needed ? need.reasons : ["all"] });
+      }
+    }
+  }
 
-  let ocrText = new Map<number, string>();
-  if (emptyPages.length > 0) {
+  let transcribed = new Map<number, string>();
+  if (plan.size > 0) {
     try {
-      ocrText = await ocrPages(bytes, emptyPages);
+      transcribed = await transcribePages(bytes, [...plan.keys()]);
     } catch {
-      // OCR is best effort; pages stay empty and the document fails later only if nothing readable remains.
+      // Best effort: the original text layer is kept; pages are marked as attempted below.
     }
   }
 
   if (todo.length > 0) {
     const { error } = await supabase.from("document_pages").upsert(
       todo.map((p) => {
-        const ocr = ocrText.get(p.page);
+        const planned = plan.get(p.page);
+        const accepted = planned ? validateTranscription(p.text, transcribed.get(p.page)) : null;
         return {
           document_id: doc.id,
           user_id: doc.user_id,
           page_number: p.page,
-          text: ocr && ocr.length > 0 ? ocr : p.text,
-          ocr_used: Boolean(ocr && ocr.length > 0),
+          text: accepted ?? p.text,
+          ocr_used: Boolean(planned?.empty && accepted),
+          reextracted: Boolean(accepted),
+          reextract_reason: planned ? `${accepted ? "" : "failed:"}${planned.reasons.join(",")}` : null,
         };
       }),
       { onConflict: "document_id,page_number" },
@@ -297,7 +313,7 @@ export async function runIngestStep(supabase: SupabaseClient, jobId: string): Pr
 
   const { data: doc } = await supabase
     .from("documents")
-    .select("id, user_id, course_id, week_number, title, storage_path, page_count")
+    .select("id, user_id, course_id, week_number, title, storage_path, page_count, transcribe_all")
     .eq("id", job.document_id)
     .maybeSingle<Doc>();
   if (!doc) fail("Doküman bulunamadı.");
@@ -346,9 +362,36 @@ export async function runIngestStep(supabase: SupabaseClient, jobId: string): Pr
 }
 
 // Creates a job for the document, or revives a failed one at the stage where it stopped.
-export async function startIngestJob(supabase: SupabaseClient, documentId: string): Promise<string> {
+export type StartOptions = {
+  // Throw away the stored pages and process the document again from the file.
+  reprocess?: boolean;
+  // Persist the "transcribe every page from the PDF image" switch on the document.
+  transcribeAll?: boolean;
+};
+
+export async function startIngestJob(
+  supabase: SupabaseClient,
+  documentId: string,
+  options: StartOptions = {},
+): Promise<string> {
   const { data: doc } = await supabase.from("documents").select("id").eq("id", documentId).maybeSingle();
   if (!doc) fail("Doküman bulunamadı.");
+
+  if (options.transcribeAll !== undefined) {
+    await supabase.from("documents").update({ transcribe_all: options.transcribeAll }).eq("id", documentId);
+  }
+  if (options.reprocess) {
+    const { error } = await supabase.from("document_pages").delete().eq("document_id", documentId);
+    if (error) throw new Error(error.message);
+    await supabase.from("documents").update({ status: "pending", error: null }).eq("id", documentId);
+    const { data: fresh, error: jobError } = await supabase
+      .from("ingestion_jobs")
+      .insert({ document_id: documentId })
+      .select("id")
+      .single();
+    if (jobError || !fresh) throw new Error(jobError?.message ?? "İş oluşturulamadı.");
+    return fresh.id;
+  }
 
   const { data: existing } = await supabase
     .from("ingestion_jobs")

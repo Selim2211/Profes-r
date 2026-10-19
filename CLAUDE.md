@@ -796,6 +796,7 @@ Projenin asıl amacı: yüklenen PDF ve ders notlarının DOĞRU, EKSİKSİZ ve 
 - [ ] Faz 8 — PWA, cila ve yayın
 
 **Notlar / yarım kalanlar:**
+- Yeni Faz 4 alt görev 1-2 (migration 0004 + sadık aktarım): kod hazır (`0004_summaries.sql`, `lib/ingest/transcribe.ts`, `transcribePages`, `transcribe_all` seçeneği, "Yeniden işle" / "Görselle aktar" düğmeleri; ekstraksiyon dilimi 5 sayfa). Örnek PDF'in 4-6. sayfaları Gemini ile denendi: tablo ve şema doğru markdown'a döndü. Kalan: 0004'ün Supabase'de çalıştırılması, hattın uygulamada uçtan uca denenmesi, formüllü/taranmış PDF ile test. Sıradaki: alt görev 3 (bölümleme).
 - Eski "hafta anlatımı" işi (get_week_content, `/api/week`, hafta sayfası) kodlandı ve çalışıyor; yeni Faz 4'ün alt yapısına dönüştürülecek.
 - Faz 3: çalışıyor (`0003` uygulandı; notlarda olan soru kaynaklı cevaplandı, olmayan soruda "notlarda geçmiyor" dendi, kaynak paneli ve `PDF'te aç` doğrulandı). Kalan: telefondan senkron kontrolü, `tests/eval/questions.json` + `npm run eval` henüz yok. Faz 2'nin 50+ sayfa PDF ve taranmış PDF testleri de hâlâ elle yapılmadı (13 sayfalık metin PDF'i başarıyla işlendi).
 - Faz 2: kod hazır (`lib/ingest/*`, `/api/ingest`, yükleme sayfası, doküman listesi, `0002_documents_chunks.sql`; embedding: OpenRouter `baai/bge-m3`, 768 boyut). Kalan: 0002 migration'ının çalıştırılması, gerçek 50+ sayfa PDF ve taranmış PDF ile elle test (OCR OpenRouter'daki modelle henüz denenmedi), `npm run eval` seti Faz 3'te.

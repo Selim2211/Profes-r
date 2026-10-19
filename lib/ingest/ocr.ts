@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import { chatModel } from "@/lib/ai/models";
-import { OCR_PROMPT } from "@/lib/ai/prompts";
+import { TRANSCRIBE_PROMPT } from "@/lib/ai/prompts";
 
 const PAGE_MARKER = /<<<PAGE\s+(\d+)>>>/g;
 
@@ -18,19 +18,17 @@ export function parseOcrOutput(output: string): Map<number, string> {
 }
 
 // Sends the PDF to the multimodal model and asks it to transcribe only the given pages.
-export async function ocrPages(
-  pdf: Uint8Array,
-  pages: number[],
-): Promise<Map<number, string>> {
+async function readPages(pdf: Uint8Array, pages: number[], prompt: string): Promise<Map<number, string>> {
   if (pages.length === 0) return new Map();
 
   const { text } = await generateText({
     model: chatModel(),
+    temperature: 0,
     messages: [
       {
         role: "user",
         content: [
-          { type: "text", text: `${OCR_PROMPT}\n\nİstenen sayfalar: ${pages.join(", ")}` },
+          { type: "text", text: `${prompt}\n\nİstenen sayfalar: ${pages.join(", ")}` },
           { type: "file", data: pdf, mediaType: "application/pdf" },
         ],
       },
@@ -40,4 +38,10 @@ export async function ocrPages(
   const parsed = parseOcrOutput(text);
   const wanted = new Set(pages);
   return new Map([...parsed].filter(([page]) => wanted.has(page)));
+}
+
+// Reads pages from the PDF image into faithful markdown. Used for scans (no text layer) and for
+// pages with tables, formulas or diagrams whose text layer is unreliable.
+export function transcribePages(pdf: Uint8Array, pages: number[]) {
+  return readPages(pdf, pages, TRANSCRIBE_PROMPT);
 }

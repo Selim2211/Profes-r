@@ -53,6 +53,7 @@ export function UploadForm({ courseId }: { courseId: string }) {
         id: documentId,
         course_id: courseId,
         week_number: week,
+        transcribe_all: form.get("transcribeAll") === "on",
         title: title || file.name.replace(/\.[^.]+$/, ""),
         storage_path: storagePath,
       });
@@ -90,6 +91,16 @@ export function UploadForm({ courseId }: { courseId: string }) {
           <Input id="title" name="title" disabled={busy} className="h-11" />
         </div>
       </div>
+
+      <label className="flex min-h-11 items-start gap-3 text-sm">
+        <input type="checkbox" name="transcribeAll" disabled={busy} className="mt-1 size-4" />
+        <span>
+          Tüm sayfaları görselle aktar
+          <span className="block text-xs text-muted-foreground">
+            Formül, tablo veya şema ağırlıklı notlar için önerilir (PDF). Daha yavaş çalışır ve daha çok model kotası harcar.
+          </span>
+        </span>
+      </label>
 
       {status && (
         <div className="space-y-1" role="status">

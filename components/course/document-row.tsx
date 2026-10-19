@@ -26,12 +26,14 @@ export function DocumentRow({ id, title, status, error, pageCount, deleteAction 
   const [progress, setProgress] = useState<{ label: string; value: number } | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  async function retry() {
+  async function retry(options: { reprocess?: boolean; transcribeAll?: boolean } = {}) {
     setLocalError(null);
     setProgress({ label: "Başlıyor", value: 0 });
     try {
-      const result = await runIngest(id, (p) =>
-        setProgress({ label: STAGE_LABELS[p.stage] ?? p.stage, value: p.progress }),
+      const result = await runIngest(
+        id,
+        (p) => setProgress({ label: STAGE_LABELS[p.stage] ?? p.stage, value: p.progress }),
+        options,
       );
       if (result.stage === "failed") setLocalError(result.error);
     } catch (e) {
@@ -54,11 +56,33 @@ export function DocumentRow({ id, title, status, error, pageCount, deleteAction 
             {pageCount ? ` · ${pageCount} sayfa` : ""}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap justify-end gap-2">
           {canRun && (
-            <Button size="sm" variant="outline" className="min-h-11" onClick={retry} disabled={progress !== null}>
+            <Button size="sm" variant="outline" className="min-h-11" onClick={() => retry()} disabled={progress !== null}>
               {status === "failed" ? "Tekrar dene" : "Devam et"}
             </Button>
+          )}
+          {status === "ready" && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="min-h-11"
+                onClick={() => retry({ reprocess: true })}
+                disabled={progress !== null}
+              >
+                Yeniden işle
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="min-h-11"
+                onClick={() => retry({ reprocess: true, transcribeAll: true })}
+                disabled={progress !== null}
+              >
+                Görselle aktar
+              </Button>
+            </>
           )}
           <form action={deleteAction}>
             <Button type="submit" size="sm" variant="destructive" className="min-h-11" disabled={progress !== null}>

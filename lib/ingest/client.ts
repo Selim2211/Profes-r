@@ -17,11 +17,12 @@ export const STAGE_LABELS: Record<string, string> = {
 export async function runIngest(
   documentId: string,
   onProgress: (progress: IngestProgress) => void,
+  options: { reprocess?: boolean; transcribeAll?: boolean } = {},
 ): Promise<IngestProgress> {
   const start = await fetch("/api/ingest", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ documentId }),
+    body: JSON.stringify({ documentId, ...options }),
   });
   const started = await start.json();
   if (!start.ok) throw new Error(started.error ?? "İşleme başlatılamadı.");
