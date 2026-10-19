@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { citationLabel, toCitation } from "@/lib/rag/search";
-import { extractCitationRefs } from "@/lib/rag/citations";
+import { extractCitationRefs, normalizeCitationTags } from "@/lib/rag/citations";
+
+describe("normalizeCitationTags", () => {
+  it("splits tags merged into one bracket", () => {
+    expect(normalizeCitationTags("Bilgi [H1 · s.1, H1 · s.2] ve [H3 · s.4-5; Not · s.7].")).toBe(
+      "Bilgi [H1 · s.1] [H1 · s.2] ve [H3 · s.4-5] [Not · s.7].",
+    );
+  });
+
+  it("leaves single tags and other brackets alone", () => {
+    const text = "Tek [H1 · s.4] ve [başka bir köşeli ifade] ile [[CEVAP: x]].";
+    expect(normalizeCitationTags(text)).toBe(text);
+  });
+});
 
 describe("citationLabel", () => {
   it("formats week and single page", () => {

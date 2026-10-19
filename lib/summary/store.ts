@@ -1,5 +1,109 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SectionStore, StoredSection } from "./map";
+import { makeTagFor, type NoteEntry, type TagFor } from "./notes";
+import type { SummaryLevel } from "./template";
+
+export type SummaryScope =
+  | { scope: "document"; courseId: string; documentId: string }
+  | { scope: "week"; courseId: string; weekNumber: number };
+
+function toEntry(row: StoredSection): NoteEntry {
+  return { title: row.title, pageStart: row.page_start, pageEnd: row.page_end, notes: row.content };
+}
+
+// All stored section notes for a summary scope, in reading order. A week gathers every ready
+// document of that week, so a second document is covered together with the first.
+export async function loadScopeEntries(
+  supabase: SupabaseClient,
+  target: SummaryScope,
+): Promise<{ entries: NoteEntry[]; tagFor: TagFor; weekNumber: number | null }> {
+  let documents: { id: string; week_number: number | null }[];
+
+  if (target.scope === "document") {
+    const { data, error } = await supabase
+      .from("documents")
+      .select("id, week_number")
+      .eq("id", target.documentId)
+      .eq("course_id", target.courseId);
+    if (error) throw new Error(error.message);
+    documents = data ?? [];
+  } else {
+    const { data, error } = await supabase
+      .from("documents")
+      .select("id, week_number")
+      .eq("course_id", target.courseId)
+      .eq("week_number", target.weekNumber)
+      .eq("status", "ready")
+      .order("created_at");
+    if (error) throw new Error(error.message);
+    documents = data ?? [];
+  }
+
+  const entries: NoteEntry[] = [];
+  for (const doc of documents) {
+    const { data, error } = await supabase
+      .from("section_summaries")
+      .select("section_index, title, page_start, page_end, source_hash, content")
+      .eq("document_id", doc.id)
+      .order("section_index");
+    if (error) throw new Error(error.message);
+    entries.push(...((data ?? []) as StoredSection[]).map(toEntry));
+  }
+
+  const weekNumber = target.scope === "week" ? target.weekNumber : (documents[0]?.week_number ?? null);
+  return { entries, tagFor: makeTagFor(weekNumber), weekNumber };
+}
+
+export type SaveSummaryInput = SummaryScope & {
+  userId: string;
+  level: SummaryLevel;
+  contentMd: string;
+  model: string;
+  coverage?: number | null;
+  verification?: unknown;
+  status?: "draft" | "ready" | "failed";
+};
+
+// Every save is a new version; earlier versions are kept.
+export async function saveSummary(supabase: SupabaseClient, input: SaveSummaryInput): Promise<{ id: string; version: number }> {
+  let latest = supabase
+    .from("summaries")
+    .select("version")
+    .eq("course_id", input.courseId)
+    .eq("scope", input.scope)
+    .eq("level", input.level)
+    .order("version", { ascending: false })
+    .limit(1);
+  latest =
+    input.scope === "document"
+      ? latest.eq("document_id", input.documentId)
+      : latest.eq("week_number", input.weekNumber);
+
+  const { data: previous, error: versionError } = await latest.maybeSingle();
+  if (versionError) throw new Error(versionError.message);
+  const version = (previous?.version ?? 0) + 1;
+
+  const { data, error } = await supabase
+    .from("summaries")
+    .insert({
+      user_id: input.userId,
+      course_id: input.courseId,
+      scope: input.scope,
+      document_id: input.scope === "document" ? input.documentId : null,
+      week_number: input.scope === "week" ? input.weekNumber : null,
+      level: input.level,
+      content_md: input.contentMd,
+      coverage: input.coverage ?? null,
+      verification: input.verification ?? null,
+      status: input.status ?? "draft",
+      version,
+      model: input.model,
+    })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Özet kaydedilemedi.");
+  return { id: data.id, version };
+}
 
 // section_summaries rows for one document. `userId` is written explicitly so the same code also
 // works with a service-role client; with a user client RLS enforces ownership either way.
