@@ -11,30 +11,54 @@ function requireEnv(name: string): string {
   return value;
 }
 
-function getProvider() {
+function providerName(): "openrouter" | "google" {
   const provider = process.env.AI_PROVIDER ?? "openrouter";
-  switch (provider) {
-    case "openrouter":
-      return createOpenRouter({ apiKey: requireEnv("OPENROUTER_API_KEY") });
-    case "google":
-      return createGoogleGenerativeAI({
-        apiKey: requireEnv("GOOGLE_GENERATIVE_AI_API_KEY"),
-      });
-    default:
-      throw new Error(`Unsupported AI_PROVIDER: ${provider}`);
+  if (provider !== "openrouter" && provider !== "google") {
+    throw new Error(`Unsupported AI_PROVIDER: ${provider}`);
   }
+  return provider;
+}
+
+function openrouter() {
+  return createOpenRouter({ apiKey: requireEnv("OPENROUTER_API_KEY") });
+}
+
+function google() {
+  return createGoogleGenerativeAI({
+    apiKey: requireEnv("GOOGLE_GENERATIVE_AI_API_KEY"),
+  });
 }
 
 export const EMBEDDING_DIM = Number(process.env.AI_EMBEDDING_DIM ?? 768);
 
 export function chatModel() {
-  return getProvider().languageModel(requireEnv("AI_MODEL_CHAT"));
+  const id = requireEnv("AI_MODEL_CHAT");
+  return providerName() === "openrouter"
+    ? openrouter().languageModel(id)
+    : google().languageModel(id);
 }
 
 export function fastModel() {
-  return getProvider().languageModel(requireEnv("AI_MODEL_FAST"));
+  const id = requireEnv("AI_MODEL_FAST");
+  return providerName() === "openrouter"
+    ? openrouter().languageModel(id)
+    : google().languageModel(id);
 }
 
+// Embeddings are always requested at EMBEDDING_DIM (pgvector columns are vector(768)).
 export function embeddingModel() {
-  return getProvider().embeddingModel(requireEnv("AI_MODEL_EMBEDDING"));
+  const id = requireEnv("AI_MODEL_EMBEDDING");
+  if (providerName() === "openrouter") {
+    return openrouter().textEmbeddingModel(id, {
+      extraBody: { dimensions: EMBEDDING_DIM },
+    });
+  }
+  return google().embedding(id);
+}
+
+// Extra per-call options needed to get EMBEDDING_DIM vectors from the active provider.
+export function embeddingProviderOptions() {
+  return providerName() === "google"
+    ? { google: { outputDimensionality: EMBEDDING_DIM } }
+    : undefined;
 }

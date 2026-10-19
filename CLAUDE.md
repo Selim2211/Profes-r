@@ -757,6 +757,7 @@ create table usage_logs (
 - [ ] Faz 8 — PWA, cila ve yayın
 
 **Notlar / yarım kalanlar:**
+- Faz 2: kod hazır (`lib/ingest/*`, `/api/ingest`, yükleme sayfası, doküman listesi, `0002_documents_chunks.sql`; embedding: OpenRouter `baai/bge-m3`, 768 boyut). Kalan: 0002 migration'ının çalıştırılması, gerçek 50+ sayfa PDF ve taranmış PDF ile elle test (OCR OpenRouter'daki modelle henüz denenmedi), `npm run eval` seti Faz 3'te.
 - Faz 1: kod hazır (giriş, `proxy.ts`, ders CRUD, responsive nav, `supabase/migrations/0001_courses_weeks.sql`). Kalan: migration'ın Supabase'de çalıştırılması ve elle kabul testi (telefon/PC giriş, izinsiz e-posta, RLS).
 - Faz 0: iskelet, shadcn/ui, Vitest, Supabase istemcileri, `lib/ai/models.ts`, `.env.example` hazır; build/lint/test geçiyor. Kalan: Supabase projesi bağlantısı ve Gemini'den gerçek test cevabı (`/api/ai-test`). Sağlayıcı kararı (OpenRouter vs Gemini) kullanıcıdan bekleniyor.
 

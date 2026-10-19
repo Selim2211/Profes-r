@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseForm } from "@/components/course/course-form";
 import { createClient } from "@/lib/supabase/server";
 import { deleteCourse, updateCourse } from "../actions";
+import { CourseDocuments } from "./documents";
 
 async function CourseDetail({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -20,6 +21,7 @@ async function CourseDetail({ params }: { params: Promise<{ courseId: string }> 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{course.name}</h1>
+      <CourseDocuments courseId={course.id} />
       <Card>
         <CardHeader>
           <CardTitle>Dersi düzenle</CardTitle>
