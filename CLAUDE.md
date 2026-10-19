@@ -746,7 +746,7 @@ create table usage_logs (
 
 ## 16. İlerleme Takibi (Claude Code günceller)
 
-- [ ] Faz 0 — Kurulum
+- [x] Faz 0 — Kurulum
 - [ ] Faz 1 — Kimlik doğrulama ve dersler
 - [ ] Faz 2 — PDF yükleme ve işleme
 - [ ] Faz 3 — Sohbet (RAG)
@@ -757,7 +757,7 @@ create table usage_logs (
 - [ ] Faz 8 — PWA, cila ve yayın
 
 **Notlar / yarım kalanlar:**
-- Faz 3: kod hazır (`0003_conversations.sql`, `/api/chat` akışlı agent + `search_notes`, `/api/sources`, sohbet arayüzü, kaynak rozetleri/paneli). Kalan: 0003'ün çalıştırılması, elle kabul testi (notlarda olan/olmayan soru), `tests/eval/questions.json` + `npm run eval` henüz yok. Faz 2'nin 50+ sayfa PDF ve taranmış PDF testleri de hâlâ elle yapılmadı (13 sayfalık metin PDF'i başarıyla işlendi).
+- Faz 3: çalışıyor (`0003` uygulandı; notlarda olan soru kaynaklı cevaplandı, olmayan soruda "notlarda geçmiyor" dendi, kaynak paneli ve `PDF'te aç` doğrulandı). Kalan: telefondan senkron kontrolü, `tests/eval/questions.json` + `npm run eval` henüz yok. Faz 2'nin 50+ sayfa PDF ve taranmış PDF testleri de hâlâ elle yapılmadı (13 sayfalık metin PDF'i başarıyla işlendi).
 - Faz 2: kod hazır (`lib/ingest/*`, `/api/ingest`, yükleme sayfası, doküman listesi, `0002_documents_chunks.sql`; embedding: OpenRouter `baai/bge-m3`, 768 boyut). Kalan: 0002 migration'ının çalıştırılması, gerçek 50+ sayfa PDF ve taranmış PDF ile elle test (OCR OpenRouter'daki modelle henüz denenmedi), `npm run eval` seti Faz 3'te.
 - Faz 1: kod hazır (giriş, `proxy.ts`, ders CRUD, responsive nav, `supabase/migrations/0001_courses_weeks.sql`). Kalan: migration'ın Supabase'de çalıştırılması ve elle kabul testi (telefon/PC giriş, izinsiz e-posta, RLS).
 - Faz 0: iskelet, shadcn/ui, Vitest, Supabase istemcileri, `lib/ai/models.ts`, `.env.example` hazır; build/lint/test geçiyor. Kalan: Supabase projesi bağlantısı ve Gemini'den gerçek test cevabı (`/api/ai-test`). Sağlayıcı kararı (OpenRouter vs Gemini) kullanıcıdan bekleniyor.
