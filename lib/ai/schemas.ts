@@ -35,6 +35,32 @@ export const sectionNotesSchema = z.object({
 
 export type SectionNotes = z.infer<typeof sectionNotesSchema>;
 
+export const coverageJudgeSchema = z.object({
+  results: z.array(
+    z.object({
+      id: z.number().int(),
+      covered: z.boolean(),
+      evidence: z
+        .string()
+        .describe("covered=true ise maddedeki somut bilgiyi içeren, özetten BİREBİR kopyalanmış kısa alıntı (en çok 25 kelime); değilse boş"),
+    }),
+  ),
+});
+
+export const additionsSchema = z.object({
+  additions: z.array(
+    z.object({
+      section: z
+        .number()
+        .int()
+        .min(1)
+        .max(6)
+        .describe("Eklenecek şablon başlığının numarası (1-6); 7. başlığa ekleme yapılmaz"),
+      markdown: z.string().describe("Bu bölüme eklenecek Markdown (madde işaretleri, kaynak etiketleriyle)"),
+    }),
+  ),
+});
+
 export const outlineSchema = z.object({
   sections: z
     .array(

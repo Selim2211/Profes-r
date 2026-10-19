@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SectionStore, StoredSection } from "./map";
 import { makeTagFor, type NoteEntry, type TagFor } from "./notes";
+import type { Topic } from "./coverage";
+import { segmentsByHeadings } from "./sections";
 import type { SummaryLevel } from "./template";
 
 export type SummaryScope =
@@ -52,6 +54,66 @@ export async function loadScopeEntries(
 
   const weekNumber = target.scope === "week" ? target.weekNumber : (documents[0]?.week_number ?? null);
   return { entries, tagFor: makeTagFor(weekNumber), weekNumber };
+}
+
+// Headings found in the stored pages of the scope's documents (e.g. every slide title), in order,
+// each with the text written under it.
+export async function loadTopics(supabase: SupabaseClient, target: SummaryScope): Promise<Topic[]> {
+  let query = supabase.from("documents").select("id").eq("course_id", target.courseId);
+  query =
+    target.scope === "document"
+      ? query.eq("id", target.documentId)
+      : query.eq("week_number", target.weekNumber).eq("status", "ready");
+  const { data: documents, error } = await query.order("created_at");
+  if (error) throw new Error(error.message);
+
+  const topics: Topic[] = [];
+  for (const doc of documents ?? []) {
+    const { data: rows, error: pagesError } = await supabase
+      .from("document_pages")
+      .select("page_number, text")
+      .eq("document_id", doc.id)
+      .order("page_number");
+    if (pagesError) throw new Error(pagesError.message);
+
+    const pages = (rows ?? []).map((r) => ({ page: r.page_number as number, text: r.text as string }));
+    for (const segment of segmentsByHeadings(pages)) {
+      if (!segment.title) continue;
+      topics.push({
+        title: segment.title,
+        content: segment.blocks.map((b) => b.text).join("\n"),
+        pageStart: segment.blocks[0].page,
+        pageEnd: segment.blocks[segment.blocks.length - 1].page,
+      });
+    }
+  }
+  return topics;
+}
+
+export type SummaryPatch = {
+  contentMd?: string;
+  coverage?: number | null;
+  status?: "draft" | "ready" | "failed";
+  // Merged into the stored verification object (keys not mentioned are kept).
+  verification?: Record<string, unknown>;
+};
+
+// Updates a draft summary in place while the pipeline is still running (coverage, verification).
+// User edits and regenerations must go through saveSummary so earlier versions are kept.
+export async function updateSummary(supabase: SupabaseClient, id: string, patch: SummaryPatch): Promise<void> {
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.contentMd !== undefined) update.content_md = patch.contentMd;
+  if (patch.coverage !== undefined) update.coverage = patch.coverage;
+  if (patch.status !== undefined) update.status = patch.status;
+
+  if (patch.verification) {
+    const { data, error } = await supabase.from("summaries").select("verification").eq("id", id).single();
+    if (error) throw new Error(error.message);
+    update.verification = { ...((data?.verification as Record<string, unknown> | null) ?? {}), ...patch.verification };
+  }
+
+  const { error } = await supabase.from("summaries").update(update).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export type SaveSummaryInput = SummaryScope & {
