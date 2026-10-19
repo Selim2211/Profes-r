@@ -52,9 +52,19 @@ export async function CourseDocuments({ courseId }: { courseId: string }) {
 
       {[...groups].map(([week, docs]) => (
         <div key={week ?? "none"} className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            {week === null ? "Haftaya bağlı değil" : `${week}. Hafta`}
-          </h3>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {week === null ? "Haftaya bağlı değil" : `${week}. Hafta`}
+            </h3>
+            {week !== null && (
+              <Link
+                href={`/courses/${courseId}/week/${week}`}
+                className="flex min-h-11 items-center text-sm underline underline-offset-4"
+              >
+                Haftayı anlat
+              </Link>
+            )}
+          </div>
           <ul className="space-y-2">
             {docs.map((doc) => (
               <DocumentRow

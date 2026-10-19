@@ -3,11 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 
 const SIGNED_URL_SECONDS = 600;
 
-const querySchema = z.object({
-  conversationId: z.string().uuid(),
-  week: z.coerce.number().int().min(1).max(52).nullable(),
-  page: z.coerce.number().int().min(1),
-});
+const querySchema = z
+  .object({
+    conversationId: z.string().uuid().nullable(),
+    courseId: z.string().uuid().nullable(),
+    week: z.coerce.number().int().min(1).max(52).nullable(),
+    page: z.coerce.number().int().min(1),
+  })
+  .refine((q) => q.conversationId || q.courseId);
 
 type Citation = { chunk_id: string; week: number | null; page: number };
 
@@ -20,30 +23,38 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const parsed = querySchema.safeParse({
     conversationId: params.get("conversationId"),
+    courseId: params.get("courseId"),
     week: params.get("week") || null,
     page: params.get("page"),
   });
   if (!parsed.success) return Response.json({ error: "Geçersiz istek." }, { status: 400 });
   const { conversationId, week, page } = parsed.data;
 
-  const { data: conversation } = await supabase
-    .from("conversations")
-    .select("course_id")
-    .eq("id", conversationId)
-    .maybeSingle();
-  if (!conversation) return Response.json({ error: "Sohbet bulunamadı." }, { status: 404 });
+  // The scope is either a conversation (chat badges) or a course (week page badges).
+  let courseId = parsed.data.courseId;
+  let known: Citation | undefined;
 
-  // Prefer the sources the assistant actually used in this conversation.
-  const { data: messages } = await supabase
-    .from("messages")
-    .select("citations")
-    .eq("conversation_id", conversationId)
-    .eq("role", "assistant")
-    .order("created_at", { ascending: false });
+  if (conversationId) {
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("course_id")
+      .eq("id", conversationId)
+      .maybeSingle();
+    if (!conversation) return Response.json({ error: "Sohbet bulunamadı." }, { status: 404 });
+    courseId = conversation.course_id;
 
-  const known = (messages ?? [])
-    .flatMap((m) => (m.citations ?? []) as Citation[])
-    .find((c) => c.week === week && c.page === page);
+    // Prefer the sources the assistant actually used in this conversation.
+    const { data: messages } = await supabase
+      .from("messages")
+      .select("citations")
+      .eq("conversation_id", conversationId)
+      .eq("role", "assistant")
+      .order("created_at", { ascending: false });
+
+    known = (messages ?? [])
+      .flatMap((m) => (m.citations ?? []) as Citation[])
+      .find((c) => c.week === week && c.page === page);
+  }
 
   let chunkQuery = supabase
     .from("chunks")
@@ -55,7 +66,7 @@ export async function GET(request: Request) {
   } else {
     chunkQuery = chunkQuery.lte("page_start", page).gte("page_end", page);
     chunkQuery = week === null ? chunkQuery.is("week_number", null) : chunkQuery.eq("week_number", week);
-    if (conversation.course_id) chunkQuery = chunkQuery.eq("course_id", conversation.course_id);
+    if (courseId) chunkQuery = chunkQuery.eq("course_id", courseId);
   }
 
   const { data: chunk } = await chunkQuery.maybeSingle();

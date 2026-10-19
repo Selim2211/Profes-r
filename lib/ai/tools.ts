@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { tool } from "ai";
 import { z } from "zod";
 import { citationLabel, searchNotes, toCitation, type Citation } from "@/lib/rag/search";
+import { getWeekContent } from "@/lib/rag/week";
 
 export type ToolContext = {
   supabase: SupabaseClient;
@@ -44,6 +45,47 @@ export function createTools(ctx: ToolContext) {
             metin: hit.content,
           };
         });
+      },
+    }),
+
+    get_week_content: tool({
+      description:
+        "Bir dersin belirli bir haftasının özetini, konularını ve notlarını getirir. Öğrenci bir haftayı anlatmanı istediğinde ('3. haftayı anlat') kullan.",
+      inputSchema: z.object({
+        week: z.number().int().min(1).max(52).describe("Hafta numarası"),
+        courseId: z.string().uuid().optional().describe("Ders kimliği; sohbet bir derse bağlı değilse kullan"),
+      }),
+      execute: async ({ week, courseId }) => {
+        const effectiveCourse = ctx.courseId ?? courseId;
+        if (!effectiveCourse) {
+          return { hata: "Hangi dersin haftası olduğu belli değil. Öğrenciye hangi dersi kastettiğini sor." };
+        }
+
+        const content = await getWeekContent(ctx.supabase, effectiveCourse, week);
+        if (!content) return { hata: `Bu derste ${week}. hafta için yüklenmiş not yok.` };
+
+        for (const chunk of content.chunks) {
+          ctx.citations.set(chunk.id, {
+            ...toCitation({ ...chunk, course_id: effectiveCourse, score: 0 }),
+            label: chunk.label,
+            pageStart: chunk.page_start,
+            pageEnd: chunk.page_end,
+          });
+        }
+
+        return {
+          hafta: content.week,
+          baslik: content.title,
+          ozet: content.summary,
+          konular: content.topics,
+          kismi: content.truncated,
+          parcalar: content.chunks.map((c) => ({
+            etiket: c.label,
+            sayfa: c.page_start === c.page_end ? `${c.page_start}` : `${c.page_start}-${c.page_end}`,
+            baslik: c.heading,
+            metin: c.content,
+          })),
+        };
       },
     }),
   };
