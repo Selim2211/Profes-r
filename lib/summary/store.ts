@@ -90,6 +90,32 @@ export async function loadTopics(supabase: SupabaseClient, target: SummaryScope)
   return topics;
 }
 
+// Stored page texts of the scope's documents, used to find the page a quote comes from.
+export async function loadScopePages(
+  supabase: SupabaseClient,
+  target: SummaryScope,
+): Promise<{ documentId: string; page: number; text: string }[]> {
+  let query = supabase.from("documents").select("id").eq("course_id", target.courseId);
+  query =
+    target.scope === "document"
+      ? query.eq("id", target.documentId)
+      : query.eq("week_number", target.weekNumber).eq("status", "ready");
+  const { data: documents, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const pages: { documentId: string; page: number; text: string }[] = [];
+  for (const doc of documents ?? []) {
+    const { data, error: pagesError } = await supabase
+      .from("document_pages")
+      .select("page_number, text")
+      .eq("document_id", doc.id)
+      .order("page_number");
+    if (pagesError) throw new Error(pagesError.message);
+    pages.push(...(data ?? []).map((r) => ({ documentId: doc.id as string, page: r.page_number as number, text: r.text as string })));
+  }
+  return pages;
+}
+
 export type SummaryPatch = {
   contentMd?: string;
   coverage?: number | null;

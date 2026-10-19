@@ -47,6 +47,22 @@ export const coverageJudgeSchema = z.object({
   ),
 });
 
+export const claimJudgeSchema = z.object({
+  results: z.array(
+    z.object({
+      id: z.number().int(),
+      verdict: z.enum(["supported", "partial", "unsupported"]),
+      evidence: z.number().int().describe("Dayanak olarak kullanılan kanıtın numarası; yoksa 0"),
+      quote: z
+        .string()
+        .describe("Seçilen kanıttan BİREBİR kopyalanmış, iddiayı destekleyen kısa alıntı (en çok 30 kelime), kanıtın kendi dilinde; unsupported ise boş"),
+      rewrite: z
+        .string()
+        .describe("partial ise: yalnızca kanıtla desteklenen bilgiyi içeren düzeltilmiş iddia (Türkçe, aynı biçimde, kaynak etiketi olmadan); diğer durumlarda boş"),
+    }),
+  ),
+});
+
 export const additionsSchema = z.object({
   additions: z.array(
     z.object({
