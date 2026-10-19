@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { runGuarded } from "@/lib/ai/guard";
 import { runIngestStep } from "@/lib/ingest/pipeline";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,10 +19,13 @@ export async function POST(
     return Response.json({ error: "Geçersiz iş." }, { status: 400 });
   }
 
-  try {
-    return Response.json(await runIngestStep(supabase, jobId));
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "İşlem başarısız.";
-    return Response.json({ error: message }, { status: 400 });
-  }
+  // Embeddings are logged as "embed", page transcription as "ocr"; the rest of ingestion (the week summary) is "summarize".
+  return runGuarded(supabase, auth.user.id, "summarize", {}, async () => {
+    try {
+      return Response.json(await runIngestStep(supabase, jobId));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "İşlem başarısız.";
+      return Response.json({ error: message }, { status: 400 });
+    }
+  });
 }

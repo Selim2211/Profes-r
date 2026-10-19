@@ -50,6 +50,9 @@ export type VerificationReport = {
 
 const clip = (text: string, length = EVIDENCE_CHARS) => (text.length > length ? `${text.slice(0, length)}…` : text);
 
+const MIN_QUOTE_CHARS = 12;
+// After normalization (symbols and spaces removed) "$v = y^{1-n}$" is just "vy1n".
+const MIN_FORMULA_QUOTE_CHARS = 4;
 const MIN_FUZZY_WORDS = 5;
 const FUZZY_WORD_RATIO = 0.85;
 
@@ -61,7 +64,9 @@ const wordsOf = (text: string) => (text.match(/[\p{L}\p{N}]+/gu) ?? []).map(norm
 // the chunk counts too; an invented sentence shares far fewer words and still fails.
 export function quoteInChunk(quote: string, chunk: Pick<Evidence, "content">): boolean {
   const needle = normalizeForMatch(quote);
-  if (needle.length < 12) return false;
+  // A formula such as "$v = y^{1-n}$" is legitimately short; ordinary text needs a longer quote.
+  const minChars = /[$\\=^_]/.test(quote) ? MIN_FORMULA_QUOTE_CHARS : MIN_QUOTE_CHARS;
+  if (needle.length < minChars) return false;
   if (normalizeForMatch(chunk.content).includes(needle)) return true;
 
   const words = wordsOf(quote);

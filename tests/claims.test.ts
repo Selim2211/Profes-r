@@ -101,6 +101,12 @@ describe("rewriteKeepsShape", () => {
     expect(rewriteKeepsShape("x", "iki\nsatır", "item")).toBe(false);
     expect(rewriteKeepsShape("x", "  ", "item")).toBe(false);
   });
+
+  it("rejects a rewrite that leaves a dollar sign unpaired (broken LaTeX)", () => {
+    expect(rewriteKeepsShape("$a$ ve $b$", "$a$ ve $b$ doğru", "sentence")).toBe(true);
+    expect(rewriteKeepsShape("$a$ ve $b$", "$a$ ve b$", "sentence")).toBe(false);
+    expect(rewriteKeepsShape("x", "tutar 5\\$ eder", "sentence")).toBe(true); // escaped dollar is text
+  });
 });
 
 describe("applyVerdicts", () => {

@@ -145,9 +145,15 @@ export function withTag(text: string, tag: string, kind: Claim["kind"]): string 
 
 const pipeCount = (text: string) => (text.match(/\|/g) ?? []).length;
 
-// Whether a rewrite keeps the shape of the original (table rows must keep their cells).
+// Unescaped dollar signs always come in pairs in valid inline/display math.
+export function mathDelimitersBalanced(text: string): boolean {
+  return ((text.replace(/\\\$/g, "").match(/\$/g) ?? []).length % 2) === 0;
+}
+
+// Whether a rewrite keeps the shape of the original (table rows must keep their cells) and does not
+// break LaTeX delimiters.
 export function rewriteKeepsShape(original: string, rewrite: string, kind: Claim["kind"]): boolean {
-  if (!rewrite.trim()) return false;
+  if (!rewrite.trim() || !mathDelimitersBalanced(rewrite)) return false;
   if (kind === "row") return pipeCount(rewrite) === pipeCount(original);
   return !rewrite.includes("\n");
 }

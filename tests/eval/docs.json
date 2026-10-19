@@ -24,5 +24,40 @@
       { "name": "Örnek: Boeing / SAP", "any": ["boeing"] },
       { "name": "Örnek: Waze", "any": ["waze"] }
     ]
+  },
+  {
+    "title": "Diferansiyel Denklemler (56 sayfa)",
+    "level": "standard",
+    "note": "Sentetik test dokümanı: 28 konu x 2 sayfa, formül ve tablo içerir. [TEST] dersinde durur.",
+    "expectedTopics": [
+      { "name": "Diferansiyel denklem, mertebe, derece", "any": ["mertebe"] },
+      { "name": "Doğrusal olmayan denklemler", "any": ["doğrusal olmayan"] },
+      { "name": "Değişkenlerine ayrılabilen denklemler", "any": ["ayrılabilen", "değişkenlerine ayr"] },
+      { "name": "Homojen denklemler", "any": ["homojen denklem", "v \\cdot x", "y = vx"] },
+      { "name": "Tam diferansiyel denklemler", "any": ["tam diferansiyel", "tamdır", "tam denklem"] },
+      { "name": "İntegrasyon çarpanı", "any": ["integrasyon çarpanı"] },
+      { "name": "Birinci mertebe doğrusal denklem", "any": ["birinci mertebe doğrusal", "birinci mertebeden doğrusal"] },
+      { "name": "Bernoulli", "any": ["bernoulli"] },
+      { "name": "Riccati", "any": ["riccati"] },
+      { "name": "Varlık ve teklik (Picard)", "any": ["picard", "varlık"] },
+      { "name": "Karakteristik denklem", "any": ["karakteristik denklem"] },
+      { "name": "Wronskiyen", "any": ["wronskiyen", "wronskian"] },
+      { "name": "Belirsiz katsayılar", "any": ["belirsiz katsay"] },
+      { "name": "Parametrelerin değişimi", "any": ["parametrelerin değişimi"] },
+      { "name": "Cauchy-Euler", "any": ["cauchy"] },
+      { "name": "Mekanik titreşimler / rezonans", "any": ["rezonans", "titreşim"] },
+      { "name": "Yüksek mertebe denklemler", "any": ["yüksek mertebe", "katlı kök"] },
+      { "name": "Kuvvet serisi çözümleri", "any": ["kuvvet seri", "seri çözüm"] },
+      { "name": "Laplace dönüşümü", "any": ["laplace"] },
+      { "name": "Laplace dönüşüm tablosu", "any": ["dönüşüm tablosu", "n!/s"] },
+      { "name": "Ters Laplace ve kısmi kesirler", "any": ["kısmi kesir"] },
+      { "name": "Türevin Laplace dönüşümü", "any": ["türevin laplace", "başlangıç değer problemleri cebirsel", "sy(s)"] },
+      { "name": "Basamak fonksiyonu", "any": ["basamak"] },
+      { "name": "Konvolüsyon", "any": ["konvolüsyon"] },
+      { "name": "Diferansiyel denklem sistemleri", "any": ["denklem sistem"] },
+      { "name": "Özdeğer ve özvektör", "any": ["özvektör"] },
+      { "name": "Faz düzlemi ve denge noktaları", "any": ["denge nokta", "faz düzlem"] },
+      { "name": "Sayısal yöntemler (Euler, Runge-Kutta)", "any": ["runge", "euler yöntemi"] }
+    ]
   }
 ]

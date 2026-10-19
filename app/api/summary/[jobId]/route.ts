@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { runGuarded } from "@/lib/ai/guard";
 import { runSummaryStep } from "@/lib/summary/pipeline";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,9 +15,12 @@ export async function POST(_request: Request, { params }: { params: Promise<{ jo
   const { jobId } = await params;
   if (!z.string().uuid().safeParse(jobId).success) return Response.json({ error: "Geçersiz iş." }, { status: 400 });
 
-  try {
-    return Response.json(await runSummaryStep(supabase, jobId));
-  } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "İşlem başarısız." }, { status: 400 });
-  }
+  // A refused step (budget used up) leaves the job as it is, so it can continue the next day.
+  return runGuarded(supabase, auth.user.id, "summarize", {}, async () => {
+    try {
+      return Response.json(await runSummaryStep(supabase, jobId));
+    } catch (error) {
+      return Response.json({ error: error instanceof Error ? error.message : "İşlem başarısız." }, { status: 400 });
+    }
+  });
 }

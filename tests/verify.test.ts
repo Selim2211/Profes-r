@@ -39,6 +39,13 @@ describe("quote validation", () => {
     expect(quoteInChunk("short", c)).toBe(false);
   });
 
+  it("accepts a short formula quote, but still requires it to occur in the chunk", () => {
+    const math = chunk("m", { content: "Dönüşüm: $v = y^{1-n}$ uygulanır. Sonra $v' + (1-n)P(x)v = (1-n)Q(x)$ bulunur." });
+    expect(quoteInChunk("$v = y^{1-n}$", math)).toBe(true);
+    expect(quoteInChunk("$v = y^{2-n}$", math)).toBe(false);
+    expect(quoteInChunk("da", math)).toBe(false);
+  });
+
   it("accepts a quote that differs only in markup, but not an invented one that shares a few words", () => {
     const table = chunk("t", { content: "| Post early 2000s | Web 3.0 now |\n| --- | --- |\n- Mobile Computing\n- Cloud Computing" });
     expect(quoteInChunk("Post early 2000s Web 3.0 now Mobile Computing, Cloud Computing", table)).toBe(true);

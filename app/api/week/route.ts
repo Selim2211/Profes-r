@@ -1,5 +1,6 @@
 import { streamText } from "ai";
 import { z } from "zod";
+import { runGuarded } from "@/lib/ai/guard";
 import { chatModel } from "@/lib/ai/models";
 import { WEEK_LECTURE_PROMPT } from "@/lib/ai/prompts";
 import { formatWeekForPrompt, getWeekContent } from "@/lib/rag/week";
@@ -21,15 +22,17 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Geçersiz istek." }, { status: 400 });
 
-  const content = await getWeekContent(supabase, parsed.data.courseId, parsed.data.week);
-  if (!content) {
-    return Response.json({ error: `${parsed.data.week}. hafta için yüklenmiş not yok.` }, { status: 404 });
-  }
+  return runGuarded(supabase, auth.user.id, "summarize", {}, async () => {
+    const content = await getWeekContent(supabase, parsed.data.courseId, parsed.data.week);
+    if (!content) {
+      return Response.json({ error: `${parsed.data.week}. hafta için yüklenmiş not yok.` }, { status: 404 });
+    }
 
-  const result = streamText({
-    model: chatModel(),
-    system: WEEK_LECTURE_PROMPT,
-    prompt: formatWeekForPrompt(content),
+    const result = streamText({
+      model: chatModel(),
+      system: WEEK_LECTURE_PROMPT,
+      prompt: formatWeekForPrompt(content),
+    });
+    return result.toTextStreamResponse();
   });
-  return result.toTextStreamResponse();
 }

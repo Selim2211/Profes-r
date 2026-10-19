@@ -1,5 +1,6 @@
 import { isStepCount, streamText } from "ai";
 import { z } from "zod";
+import { runGuarded } from "@/lib/ai/guard";
 import { chatModel } from "@/lib/ai/models";
 import { createTools, type ToolContext } from "@/lib/ai/tools";
 import { extractCitationRefs } from "@/lib/rag/citations";
@@ -24,7 +25,9 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Geçersiz istek." }, { status: 400 });
   const { message } = parsed.data;
+  const userId = auth.user.id;
 
+  return runGuarded(supabase, userId, "chat", { chatRate: true }, async () => {
   // Resolve (or create) the conversation. RLS guarantees it belongs to the user.
   let conversationId = parsed.data.conversationId;
   let courseId: string | null = parsed.data.courseId ?? null;
@@ -89,5 +92,6 @@ export async function POST(request: Request) {
 
   return result.toTextStreamResponse({
     headers: { "X-Conversation-Id": conversationId! },
+  });
   });
 }

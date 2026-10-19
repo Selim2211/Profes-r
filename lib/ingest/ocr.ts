@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { chatModel } from "@/lib/ai/models";
 import { TRANSCRIBE_PROMPT } from "@/lib/ai/prompts";
+import { withPurpose } from "@/lib/ai/usage";
 
 const PAGE_MARKER = /<<<PAGE\s+(\d+)>>>/g;
 
@@ -43,5 +44,5 @@ async function readPages(pdf: Uint8Array, pages: number[], prompt: string): Prom
 // Reads pages from the PDF image into faithful markdown. Used for scans (no text layer) and for
 // pages with tables, formulas or diagrams whose text layer is unreliable.
 export function transcribePages(pdf: Uint8Array, pages: number[]) {
-  return readPages(pdf, pages, TRANSCRIBE_PROMPT);
+  return withPurpose("ocr", () => readPages(pdf, pages, TRANSCRIBE_PROMPT));
 }
