@@ -5,6 +5,7 @@ import {
   pageOfQuote,
   quoteInChunk,
   resolveVerdicts,
+  verifyBatch,
   verifySummary,
   type Evidence,
   type PageRef,
@@ -99,6 +100,50 @@ describe("resolveVerdicts", () => {
   it("removes a claim that cites a non-existent evidence number", () => {
     const [v] = resolveVerdicts(claims, evidence, [{ ...good, evidence: 9 }], pages);
     expect(v).toMatchObject({ status: "removed" });
+  });
+});
+
+describe("verifyBatch: claims confirmed without a model call", () => {
+  const turkishChunk = chunk("tr", {
+    content: "Dönüşüm doğrusaldır; yani toplamın dönüşümü, dönüşümlerin toplamına eşittir. Tablo s > 0 için geçerlidir.",
+  });
+  const copied = "Dönüşüm doğrusaldır; yani toplamın dönüşümü dönüşümlerin toplamına eşittir.";
+  const unsure = "Bu yöntem hiçbir koşulda kullanılamaz ve sonuçlar her zaman geçersizdir kesinlikle.";
+
+  it("skips the judge for claims a note backs word for word and judges only the rest", async () => {
+    const judged: string[][] = [];
+    const deps: VerifyDeps = {
+      async findEvidence(claims) {
+        return claims.map(() => [turkishChunk]);
+      },
+      async judge(claims) {
+        judged.push(claims.map((c) => c.text));
+        return claims.map((c): RawJudgement => ({ id: c.id, verdict: "unsupported", evidence: 0, quote: "", rewrite: "" }));
+      },
+    };
+    const claims = parseClaims(`- ${copied}\n- ${unsure}\n`);
+    const verdicts = await verifyBatch(claims, deps, pages);
+
+    expect(verdicts.map((v) => v.status)).toEqual(["supported", "removed"]);
+    expect(verdicts[0]).toMatchObject({ auto: true });
+    expect(judged).toHaveLength(1);
+    expect(judged[0]).toEqual([unsure]);
+  });
+
+  it("makes no model call at all when every claim is confirmed by overlap", async () => {
+    let calls = 0;
+    const deps: VerifyDeps = {
+      async findEvidence(claims) {
+        return claims.map(() => [turkishChunk]);
+      },
+      async judge() {
+        calls++;
+        return [];
+      },
+    };
+    const { report } = await verifySummary({ summaryMd: `- ${copied}\n`, deps, pages });
+    expect(calls).toBe(0);
+    expect(report).toMatchObject({ claims: 1, supported: 1, autoVerified: 1 });
   });
 });
 

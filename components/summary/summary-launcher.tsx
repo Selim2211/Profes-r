@@ -18,6 +18,7 @@ type Props = {
 export function SummaryLauncher({ target, existing, initialLevel = "standard" }: Props) {
   const router = useRouter();
   const [level, setLevel] = useState<SummaryLevel>(initialLevel);
+  const [verify, setVerify] = useState(true);
   const [progress, setProgress] = useState<{ label: string; value: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +29,7 @@ export function SummaryLauncher({ target, existing, initialLevel = "standard" }:
     setError(null);
     setProgress({ label: "Başlıyor", value: 0 });
     try {
-      const result = await runSummary({ ...target, level }, (p) =>
+      const result = await runSummary({ ...target, level, verify }, (p) =>
         setProgress({ label: p.label, value: p.progress }),
       );
       if (result.step === "failed" || !result.summaryId) {
@@ -75,6 +76,20 @@ export function SummaryLauncher({ target, existing, initialLevel = "standard" }:
           {busy ? "Hazırlanıyor..." : current ? "Yeniden üret" : "Özet çıkar"}
         </Button>
       </div>
+
+      <label className="flex min-h-11 items-start gap-3 text-xs text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={verify}
+          onChange={(e) => setVerify(e.target.checked)}
+          disabled={busy}
+          className="mt-0.5 size-4"
+        />
+        <span>
+          Her iddiayı notlara karşı doğrula (önerilir). Kapatırsan özet çok daha az yapay zekâ kotası harcar ama
+          doğrulanmamış olarak işaretlenir.
+        </span>
+      </label>
 
       {progress && (
         <div className="space-y-1" role="status">

@@ -59,6 +59,8 @@ export type SummaryJob = {
   document_id: string | null;
   week_number: number | null;
   level: SummaryLevel;
+  // false: skip the claim-by-claim verification (cheaper); the summary is then marked as unverified.
+  verify: boolean;
   step: SummaryStep;
   progress: number;
   cursor: JobCursor;

@@ -15,7 +15,7 @@ export type SummaryScopeTarget = { courseId: string } & (
   | { scope: "week"; weekNumber: number }
 );
 
-export type SummaryTarget = SummaryScopeTarget & { level: SummaryLevel };
+export type SummaryTarget = SummaryScopeTarget & { level: SummaryLevel; verify?: boolean };
 
 // Browser-side driver: starts (or resumes) the job and keeps calling the slice endpoint until it is
 // done or failed, reporting progress after every slice.

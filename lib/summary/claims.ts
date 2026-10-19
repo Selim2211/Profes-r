@@ -15,7 +15,8 @@ export type Claim = {
 };
 
 export type Verdict =
-  | { claimId: number; status: "supported"; tag: string }
+  // `auto`: confirmed by word overlap with a note, without asking a model (see lexical.ts).
+  | { claimId: number; status: "supported"; tag: string; auto?: boolean }
   | { claimId: number; status: "rewritten"; tag: string; rewrite: string }
   | { claimId: number; status: "removed"; reason: string };
 

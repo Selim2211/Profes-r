@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateObject } from "ai";
-import { chatModel } from "@/lib/ai/models";
+import { judgeModel } from "@/lib/ai/models";
 import { CLAIM_JUDGE_PROMPT } from "@/lib/ai/prompts";
 import { claimJudgeSchema } from "@/lib/ai/schemas";
 import { embedTexts } from "@/lib/ingest/embed";
@@ -8,10 +8,15 @@ import { citationLabel, type NoteHit } from "@/lib/rag/search";
 import { withRetry } from "@/lib/utils/retry";
 import { applyVerdicts, parseClaims, plainText, rewriteKeepsShape, type Claim, type Verdict } from "./claims";
 import { normalizeForMatch } from "./coverage";
+import { lexicalSupport } from "./lexical";
 import type { SummaryScope } from "./store";
 
-export const VERIFY_BATCH_SIZE = 8;
-const EVIDENCE_PER_CLAIM = 4;
+// Claims of one section share evidence chunks, and the judge sees each distinct chunk once per call, so a
+// bigger batch sends fewer tokens per claim (and makes fewer calls).
+export const VERIFY_BATCH_SIZE = 12;
+// Evidence is what costs tokens (every chunk is shown to the judge), so each claim gets its best two; the
+// judge may still cite any chunk the batch brought in for other claims.
+const EVIDENCE_PER_CLAIM = 2;
 const SEARCH_CANDIDATES = 12;
 // Chunks are about 3200 characters; clipping them hides the part that supports a claim.
 const EVIDENCE_CHARS = 4000;
@@ -39,6 +44,8 @@ export type VerifyDeps = {
 export type VerificationReport = {
   claims: number;
   supported: number;
+  // How many of the supported claims were confirmed by word overlap alone (no model call).
+  autoVerified: number;
   rewritten: number;
   removed: number;
   // Share of claims that were not fully supported before the corrections (rewritten + removed).
@@ -142,13 +149,16 @@ export function buildReport(claims: Claim[], verdicts: Verdict[]): VerificationR
   const byId = new Map(claims.map((c) => [c.id, c]));
   const changes: VerificationReport["changes"] = [];
   let supported = 0;
+  let autoVerified = 0;
   let rewritten = 0;
   let removed = 0;
 
   for (const v of verdicts) {
     const before = plainText(byId.get(v.claimId)?.text ?? "");
-    if (v.status === "supported") supported++;
-    else if (v.status === "rewritten") {
+    if (v.status === "supported") {
+      supported++;
+      if (v.auto) autoVerified++;
+    } else if (v.status === "rewritten") {
       rewritten++;
       changes.push({ status: "rewritten", before, after: plainText(v.rewrite) });
     } else {
@@ -159,6 +169,7 @@ export function buildReport(claims: Claim[], verdicts: Verdict[]): VerificationR
   return {
     claims: claims.length,
     supported,
+    autoVerified,
     rewritten,
     removed,
     initialUnsupportedRatio: claims.length ? (rewritten + removed) / claims.length : 0,
@@ -167,11 +178,32 @@ export function buildReport(claims: Claim[], verdicts: Verdict[]): VerificationR
   };
 }
 
-// Verifies one batch of claims; used directly by the step-by-step job.
+// Verifies one batch of claims; used directly by the step-by-step job. Claims that a note already
+// backs word for word are confirmed without a model call; only the rest go to the judge.
 export async function verifyBatch(claims: Claim[], deps: VerifyDeps, pages: PageRef[]): Promise<Verdict[]> {
   const evidence = await deps.findEvidence(claims);
-  const raw = await deps.judge(claims, evidence);
-  return resolveVerdicts(claims, evidence, raw, pages);
+
+  const auto = new Map<number, Verdict>();
+  claims.forEach((claim, i) => {
+    const hit = lexicalSupport(claim.text, evidence[i] ?? []);
+    if (!hit) return;
+    const chunk = evidence[i][hit.chunkIndex];
+    auto.set(claim.id, { claimId: claim.id, status: "supported", tag: tagFor(chunk, pageOfQuote(hit.quote, chunk, pages)), auto: true });
+  });
+
+  const pending = claims.map((claim, i) => ({ claim, evidence: evidence[i] ?? [] })).filter((p) => !auto.has(p.claim.id));
+  const judged =
+    pending.length > 0
+      ? resolveVerdicts(
+          pending.map((p) => p.claim),
+          pending.map((p) => p.evidence),
+          await deps.judge(pending.map((p) => p.claim), pending.map((p) => p.evidence)),
+          pages,
+        )
+      : [];
+  const byId = new Map(judged.map((v) => [v.claimId, v]));
+
+  return claims.map((claim) => auto.get(claim.id) ?? byId.get(claim.id)!);
 }
 
 // Splits the summary into claims, checks each against the notes, and returns the corrected summary
@@ -222,7 +254,8 @@ export function createEvidenceFinder(supabase: SupabaseClient, scope: SummarySco
   };
 }
 
-export const modelJudge: VerifyDeps["judge"] = async (claims, evidence) => {
+// The text the judge model receives for one batch (also used to measure how many tokens a batch costs).
+export function buildJudgePrompt(claims: Claim[], evidence: Evidence[][]): string {
   const pool = buildPool(evidence);
   const numberOf = new Map(pool.map((chunk, n) => [chunk.id, n + 1]));
 
@@ -238,11 +271,14 @@ export const modelJudge: VerifyDeps["judge"] = async (claims, evidence) => {
     })
     .join("\n\n");
 
-  const prompt = `<kanitlar>\n${evidenceText}\n</kanitlar>\n\n<iddialar>\n${claimText}\n</iddialar>`;
+  return `<kanitlar>\n${evidenceText}\n</kanitlar>\n\n<iddialar>\n${claimText}\n</iddialar>`;
+}
 
+export const modelJudge: VerifyDeps["judge"] = async (claims, evidence) => {
+  const prompt = buildJudgePrompt(claims, evidence);
   const { object } = await withRetry(() =>
     generateObject({
-      model: chatModel(),
+      model: judgeModel(),
       schema: claimJudgeSchema,
       system: CLAIM_JUDGE_PROMPT,
       temperature: 0,

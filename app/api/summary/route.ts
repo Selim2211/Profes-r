@@ -10,12 +10,14 @@ const bodySchema = z.discriminatedUnion("scope", [
     courseId: z.string().uuid(),
     documentId: z.string().uuid(),
     level: z.enum(["short", "standard", "detailed"]),
+    verify: z.boolean().optional(),
   }),
   z.object({
     scope: z.literal("week"),
     courseId: z.string().uuid(),
     weekNumber: z.number().int().min(1).max(52),
     level: z.enum(["short", "standard", "detailed"]),
+    verify: z.boolean().optional(),
   }),
 ]);
 

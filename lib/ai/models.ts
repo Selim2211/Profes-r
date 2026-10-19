@@ -38,8 +38,10 @@ function google() {
 export const EMBEDDING_DIM = Number(process.env.AI_EMBEDDING_DIM ?? 768);
 
 // Every model handed out below is wrapped so its token usage lands in usage_logs (see usage.ts).
-function languageModel(envName: string) {
-  const id = requireEnv(envName);
+function languageModel(...envNames: string[]) {
+  // The first variable that is set wins (e.g. AI_MODEL_JUDGE, falling back to AI_MODEL_CHAT).
+  const name = envNames.find((n) => process.env[n]) ?? envNames[envNames.length - 1];
+  const id = requireEnv(name);
   const model = providerName() === "openrouter" ? openrouter().languageModel(id) : google().languageModel(id);
   return wrapLanguageModel({ model, middleware: languageUsageMiddleware });
 }
@@ -50,6 +52,12 @@ export function chatModel() {
 
 export function fastModel() {
   return languageModel("AI_MODEL_FAST");
+}
+
+// Checks every claim of a summary against the notes: by far the biggest token consumer of a summary run,
+// so it has its own setting. Unset, it uses the chat model.
+export function judgeModel() {
+  return languageModel("AI_MODEL_JUDGE", "AI_MODEL_CHAT");
 }
 
 // Embeddings are always requested at EMBEDDING_DIM (pgvector columns are vector(768)).

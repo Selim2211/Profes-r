@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "eval": "vitest run --config vitest.eval.config.ts"
+    "eval": "vitest run --config vitest.eval.config.ts",
+    "reembed": "vitest run --config vitest.tools.config.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.99",

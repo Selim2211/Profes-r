@@ -12,8 +12,9 @@ import { transcribePages } from "./ocr";
 import { detectTranscribeNeed, validateTranscription } from "./transcribe";
 import { summarizeWeek } from "./summarize";
 
-// Small slices keep each request short: a slice may include one vision call over the whole PDF.
-const EXTRACT_SLICE_PAGES = 5;
+// A slice may include one vision call, and that call sends the whole PDF to the model whatever the number
+// of pages asked for. Bigger slices mean fewer such calls (cost); 10 pages keeps a request near 30 seconds.
+const EXTRACT_SLICE_PAGES = 10;
 const EMBED_SLICE_CHUNKS = 24;
 const TOPICS_PER_CHUNK = 2;
 

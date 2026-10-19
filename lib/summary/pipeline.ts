@@ -250,6 +250,18 @@ async function stepCoverage(supabase: SupabaseClient, job: SummaryJob) {
   ]);
 
   const { contentMd, report } = await ensureCoverage({ summaryMd: md, entries, tagFor, level: job.level, topics });
+  // Without verification the summary is finished here, flagged so the page can say it was not checked.
+  if (!job.verify) {
+    await updateSummary(supabase, job.summary_id!, {
+      contentMd: fillEmptySections(contentMd),
+      coverage: report.coverage,
+      status: "ready",
+      verification: { coverage: report, unverified: true },
+    });
+    await setJob(supabase, job, { step: "done", progress: 100, cursor: {} });
+    return;
+  }
+
   await updateSummary(supabase, job.summary_id!, {
     contentMd,
     coverage: report.coverage,
@@ -335,7 +347,7 @@ export async function runSummaryStep(supabase: SupabaseClient, jobId: string): P
   return viewOf(job);
 }
 
-export type StartInput = { courseId: string; level: SummaryLevel } & (
+export type StartInput = { courseId: string; level: SummaryLevel; verify?: boolean } & (
   | { scope: "document"; documentId: string }
   | { scope: "week"; weekNumber: number }
 );
@@ -371,6 +383,7 @@ export async function startSummaryJob(supabase: SupabaseClient, input: StartInpu
       document_id: input.scope === "document" ? input.documentId : null,
       week_number: input.scope === "week" ? input.weekNumber : null,
       level: input.level,
+      verify: input.verify ?? true,
     })
     .select("id")
     .single();

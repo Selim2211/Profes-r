@@ -22,6 +22,7 @@ type CoverageReport = {
 type VerificationReport = {
   claims: number;
   supported: number;
+  autoVerified?: number;
   rewritten: number;
   removed: number;
   changes: { status: "rewritten" | "removed"; before: string; after?: string; reason?: string }[];
@@ -34,7 +35,12 @@ export type SummaryData = {
   version: number;
   status: string;
   coverage: number | null;
-  verification: { coverage?: CoverageReport; verification?: VerificationReport; edited?: boolean } | null;
+  verification: {
+    coverage?: CoverageReport;
+    verification?: VerificationReport;
+    edited?: boolean;
+    unverified?: boolean;
+  } | null;
   createdAt: string;
   weekNumber: number | null;
   documentId: string | null;
@@ -147,6 +153,13 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
         </Button>
       </div>
 
+      {summary.verification?.unverified && (
+        <p className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm print:hidden">
+          Bu özet notlara karşı iddia iddia doğrulanmadı (doğrulama kapalıydı). Kaynak etiketleri notlardan alınan
+          sayfa numaralarıdır; kesinlik için &quot;Yeniden üret&quot; ile doğrulamalı üretebilirsin.
+        </p>
+      )}
+
       {(coverage || check) && (
         <section className="space-y-2 rounded-lg border p-3 text-sm print:hidden" aria-label="Kalite göstergeleri">
           <div className="flex flex-wrap gap-2">
@@ -157,7 +170,8 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
             )}
             {check && (
               <span className="rounded-full bg-primary/10 px-3 py-1 font-medium">
-                Doğrulama: {check.claims} iddia · {check.supported} destekli · {check.rewritten} düzeltildi · {check.removed} kaldırıldı
+                Doğrulama: {check.claims} iddia · {check.supported} destekli
+                {check.autoVerified ? ` (${check.autoVerified} hızlı)` : ""} · {check.rewritten} düzeltildi · {check.removed} kaldırıldı
               </span>
             )}
           </div>
