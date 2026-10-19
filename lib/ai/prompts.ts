@@ -102,6 +102,8 @@ Her iddia için karar ver:
 - unsupported: kanıtlarda hiç dayanak yok ya da kanıtla çelişiyor.
 Kurallar:
 - Yalnızca verilen kanıtlara bak; kendi bilgini kullanma. İddia doğru bir genel bilgi olsa bile kanıtta yoksa unsupported/partial.
+- Çeviri farklarını (kanıt İngilizce, iddia Türkçe olabilir), eş anlamlı ifadeleri, kısaltmayı ve anlatım biçimini hata sayma: yalnızca somut bir olgu, sayı, ad, ilişki kanıtta yoksa veya farklıysa partial/unsupported de. Anlam aynıysa supported de.
+- Birden fazla kanıtı özetleyen genel bakış cümlelerini, anlattığı konuların her biri kanıtlarda varsa supported say; "quote" olarak o konulardan birini destekleyen bir alıntı ver.
 - supported ve partial için "evidence" alanına dayandığın kanıtın numarasını, "quote" alanına o kanıttan BİREBİR kopyaladığın kısa alıntıyı (en çok 30 kelime, kanıtın kendi dilinde) yaz. Alıntı bulamıyorsan unsupported de.
 - Tablo satırı iddialarında (| ... |) rewrite'ta aynı sayıda | karakterini koru.
 - Listedeki her id için tam bir sonuç döndür.

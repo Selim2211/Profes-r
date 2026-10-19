@@ -35,6 +35,18 @@ const entries: NoteEntry[] = [
 
 const summary = SUMMARY_HEADINGS.map((h, i) => `## ${i + 1}. ${h}\n\n${i === 3 ? "Notlarda formül yok." : "İçerik."}`).join("\n\n");
 
+describe("normalizeForMatch: I/ı/İ folding", () => {
+  it("matches English words regardless of capital I", () => {
+    expect(normalizeForMatch("Executive Information Systems")).toBe(normalizeForMatch("executive information systems"));
+    expect(normalizeForMatch("INFORMATION")).toBe(normalizeForMatch("information"));
+  });
+
+  it("still matches Turkish words typed with either i or ı casing", () => {
+    expect(normalizeForMatch("BAKIŞ")).toBe(normalizeForMatch("bakış"));
+    expect(normalizeForMatch("İŞLEM")).toBe(normalizeForMatch("işlem"));
+  });
+});
+
 describe("normalizeForMatch", () => {
   it("ignores case, spaces, punctuation and LaTeX spacing, with Turkish casing", () => {
     expect(normalizeForMatch("BAKIŞ, Açısı")).toBe(normalizeForMatch("bakış açısı"));

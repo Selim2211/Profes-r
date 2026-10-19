@@ -1,0 +1,22 @@
+{
+  "document": "İlk ders",
+  "questions": [
+    { "q": "Bilişim sistemi nedir?", "pages": [3], "keywords": ["information system"] },
+    { "q": "Bilişim sisteminin üç boyutu nelerdir?", "pages": [3], "keywords": ["people", "process", "technology"] },
+    { "q": "Anthony Üçgeni neyi kategorize eder?", "pages": [5], "keywords": ["anthony"] },
+    { "q": "Üst yönetimin karar vermesini hangi sistem destekler?", "pages": [5], "keywords": ["executive information"] },
+    { "q": "Günlük işlemleri hangi sistem türü yürütür?", "pages": [5], "keywords": ["transaction processing"] },
+    { "q": "Bilişim sisteminin beş bileşeni nedir?", "pages": [6], "keywords": ["hardware", "software", "data"] },
+    { "q": "Yazılım türleri nelerdir?", "pages": [7], "keywords": ["operating system"] },
+    { "q": "Ağlar ne işe yarar?", "pages": [7], "keywords": ["network"] },
+    { "q": "Süreç bileşeni ne fayda sağlar?", "pages": [9], "keywords": ["competitive advantage"] },
+    { "q": "1950-1960 döneminde hangi sistemler vardı?", "pages": [10], "keywords": ["mainframe"] },
+    { "q": "Bulut bilişim hangi dönemde ortaya çıktı?", "pages": [10], "keywords": ["cloud computing"] },
+    { "q": "Nicholas Carr makalesinde neyi savunuyor?", "pages": [11], "keywords": ["carr"] },
+    { "q": "Bilgi teknolojisi neden bir emtia olarak görülüyor?", "pages": [11], "keywords": ["commodity"] },
+    { "q": "American Apparel hangi bilişim sistemini kullanıyor?", "pages": [4], "keywords": ["american apparel"] },
+    { "q": "Boeing hangi sistemi kullanır?", "pages": [4], "keywords": ["boeing"] },
+    { "q": "Waze nedir ve ne sağlar?", "pages": [4], "keywords": ["waze"] },
+    { "q": "WireShark ne işe yarar?", "pages": [4], "keywords": ["wireshark"] }
+  ]
+}

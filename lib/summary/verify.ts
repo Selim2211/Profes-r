@@ -50,10 +50,24 @@ export type VerificationReport = {
 
 const clip = (text: string, length = EVIDENCE_CHARS) => (text.length > length ? `${text.slice(0, length)}…` : text);
 
+const MIN_FUZZY_WORDS = 5;
+const FUZZY_WORD_RATIO = 0.85;
+
+const wordsOf = (text: string) => (text.match(/[\p{L}\p{N}]+/gu) ?? []).map(normalizeForMatch).filter(Boolean);
+
 // Does the quote really appear in the evidence chunk? (Models invent quotes when they guess.)
+// A verbatim match (ignoring case, punctuation and markdown) always counts. Models also copy
+// table cells or list items with slightly different markup, so a quote whose words are almost all in
+// the chunk counts too; an invented sentence shares far fewer words and still fails.
 export function quoteInChunk(quote: string, chunk: Pick<Evidence, "content">): boolean {
   const needle = normalizeForMatch(quote);
-  return needle.length >= 12 && normalizeForMatch(chunk.content).includes(needle);
+  if (needle.length < 12) return false;
+  if (normalizeForMatch(chunk.content).includes(needle)) return true;
+
+  const words = wordsOf(quote);
+  if (words.length < MIN_FUZZY_WORDS) return false;
+  const available = new Set(wordsOf(chunk.content));
+  return words.filter((w) => available.has(w)).length / words.length >= FUZZY_WORD_RATIO;
 }
 
 // The page of the chunk's document on which the quote occurs, if it can be found.

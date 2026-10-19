@@ -39,6 +39,12 @@ describe("quote validation", () => {
     expect(quoteInChunk("short", c)).toBe(false);
   });
 
+  it("accepts a quote that differs only in markup, but not an invented one that shares a few words", () => {
+    const table = chunk("t", { content: "| Post early 2000s | Web 3.0 now |\n| --- | --- |\n- Mobile Computing\n- Cloud Computing" });
+    expect(quoteInChunk("Post early 2000s Web 3.0 now Mobile Computing, Cloud Computing", table)).toBe(true);
+    expect(quoteInChunk("Post early 2000s brought quantum networks and robotic managers everywhere", table)).toBe(false);
+  });
+
   it("finds the page of a quote inside the chunk's own document and page range", () => {
     const c = chunk("c1");
     expect(pageOfQuote("Anthony's Triangle categorizes information systems", c, pages)).toBe(5);

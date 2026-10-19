@@ -1,0 +1,28 @@
+[
+  {
+    "title": "İlk ders",
+    "level": "standard",
+    "note": "Bilişim Sistemleri Yönetimi, 1. hafta slaytları. İkinci örnek dokümanı yükleyince buraya yeni bir kayıt eklenir (title + level + expectedTopics); dokümanı bulunamayan kayıtlar atlanır.",
+    "expectedTopics": [
+      { "name": "Bilişim sisteminin tanımı", "any": ["information system", "bilişim sistemi"] },
+      { "name": "Anthony Üçgeni", "any": ["anthony"] },
+      { "name": "Stratejik düzey / EIS", "any": ["executive information", "eis"] },
+      { "name": "Taktik düzey / MIS", "any": ["management information", "yönetim bilişim"] },
+      { "name": "Operasyonel düzey / TPS", "any": ["transaction processing", "işlem işleme", "tps"] },
+      { "name": "Donanım", "any": ["hardware", "donanım"] },
+      { "name": "Yazılım: işletim sistemi ve uygulama yazılımı", "any": ["operating system", "işletim sistem"] },
+      { "name": "Veri", "any": ["collection of facts", "gerçeklerin", "olguların"] },
+      { "name": "Ağlar", "any": ["networks", "ağlar"] },
+      { "name": "İnsanlar (kullanıcılar)", "any": ["people", "insanlar"] },
+      { "name": "Süreç ve faydaları", "any": ["competitive advantage", "rekabet avantajı"] },
+      { "name": "Tarihçe: ana bilgisayarlar", "any": ["mainframe", "ana bilgisayar"] },
+      { "name": "Tarihçe: bulut bilişim", "any": ["cloud computing", "bulut bilişim"] },
+      { "name": "Nicholas Carr ve makalesi", "any": ["carr"] },
+      { "name": "BT'nin emtiaya dönüşmesi", "any": ["commodity", "emtia"] },
+      { "name": "İş yapmanın maliyeti", "any": ["cost of doing business", "iş yapmanın bir maliyeti", "iş yapma maliyeti"] },
+      { "name": "Örnek: American Apparel", "any": ["american apparel"] },
+      { "name": "Örnek: Boeing / SAP", "any": ["boeing"] },
+      { "name": "Örnek: Waze", "any": ["waze"] }
+    ]
+  }
+]

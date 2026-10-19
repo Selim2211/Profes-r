@@ -59,6 +59,9 @@ const tagsOf = (pages: number[], tagFor: TagFor) => [...new Set(pages)].map(tagF
 export function normalizeForMatch(text: string): string {
   return text
     .toLocaleLowerCase("tr-TR")
+    // Turkish lowercasing turns English "I" into "ı" (dotless) while a typed "i" stays "i", so
+    // "Information" would not match "information". Folding ı to i makes both sides agree.
+    .replace(/ı/g, "i")
     .replace(/\\(left|right|,|;|!|quad|cdot)\b/g, "")
     .replace(/[\s\p{P}\p{S}]+/gu, "");
 }
