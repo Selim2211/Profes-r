@@ -35,7 +35,13 @@ function google() {
   });
 }
 
-export const EMBEDDING_DIM = Number(process.env.AI_EMBEDDING_DIM ?? 768);
+// A value like "768 # comment" or an empty variable must not turn into NaN (it would be sent as null).
+export function parseEmbeddingDim(value: string | undefined): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 768;
+}
+
+export const EMBEDDING_DIM = parseEmbeddingDim(process.env.AI_EMBEDDING_DIM);
 
 // Every model handed out below is wrapped so its token usage lands in usage_logs (see usage.ts).
 function languageModel(...envNames: string[]) {
