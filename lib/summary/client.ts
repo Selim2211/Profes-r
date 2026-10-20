@@ -1,3 +1,4 @@
+import { readJson } from "@/lib/utils/http";
 import { STEP_LABELS, type SummaryStep } from "./jobs";
 import type { SummaryLevel } from "./template";
 
@@ -28,12 +29,12 @@ export async function runSummary(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(target),
   });
-  const started = await start.json();
+  const started = await readJson<{ jobId: string; error?: string }>(start);
   if (!start.ok) throw new Error(started.error ?? "Özet başlatılamadı.");
 
   for (;;) {
     const response = await fetch(`/api/summary/${started.jobId}`, { method: "POST" });
-    const body = await response.json();
+    const body = await readJson<{ step: SummaryStep; progress: number; error: string | null; summaryId: string | null }>(response);
     if (!response.ok) throw new Error(body.error ?? "Özet hazırlanırken hata oluştu.");
 
     const progress: SummaryProgress = {

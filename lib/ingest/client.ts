@@ -1,3 +1,5 @@
+import { readJson } from "@/lib/utils/http";
+
 export type IngestProgress = {
   stage: string;
   progress: number;
@@ -24,12 +26,12 @@ export async function runIngest(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ documentId, ...options }),
   });
-  const started = await start.json();
+  const started = await readJson<{ jobId: string; error?: string }>(start);
   if (!start.ok) throw new Error(started.error ?? "İşleme başlatılamadı.");
 
   for (;;) {
     const response = await fetch(`/api/ingest/${started.jobId}`, { method: "POST" });
-    const body = await response.json();
+    const body = await readJson<{ stage: string; progress: number; error: string | null }>(response);
     if (!response.ok) throw new Error(body.error ?? "İşleme sırasında hata oluştu.");
 
     const progress: IngestProgress = { stage: body.stage, progress: body.progress, error: body.error };

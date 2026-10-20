@@ -3,7 +3,9 @@ import { runGuarded } from "@/lib/ai/guard";
 import { runIngestStep } from "@/lib/ingest/pipeline";
 import { createClient } from "@/lib/supabase/server";
 
-export const maxDuration = 60;
+// One slice of work (pages read by the vision model, embeddings, the week summary) can take over a minute on
+// a free model, so this uses the longest duration Vercel allows on the free plan.
+export const maxDuration = 300;
 
 // Processes one slice of the job; the client calls this repeatedly until the stage is done or failed.
 export async function POST(

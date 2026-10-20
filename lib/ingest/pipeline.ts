@@ -15,7 +15,9 @@ import { summarizeWeek } from "./summarize";
 
 // A slice may include one vision call, and that call sends the whole PDF to the model whatever the number
 // of pages asked for. Bigger slices mean fewer such calls (cost); 10 pages keeps a request near 30 seconds.
-const EXTRACT_SLICE_PAGES = 10;
+// Pages read per request. Reading a page with the vision model takes several seconds on a free model, so a
+// small slice keeps every request well inside the time limit (the job resumes from the saved page).
+const EXTRACT_SLICE_PAGES = 5;
 const EMBED_SLICE_CHUNKS = 24;
 const TOPICS_PER_CHUNK = 2;
 
