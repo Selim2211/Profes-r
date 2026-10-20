@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMBEDDING_DIM, parseEmbeddingDim } from "@/lib/ai/models";
+import { EMBEDDING_DIM, parseEmbeddingDim, reasoningSettings } from "@/lib/ai/models";
 
 describe("models", () => {
   it("defaults embedding dimension to 768", () => {
@@ -16,5 +16,11 @@ describe("models", () => {
     expect(parseEmbeddingDim(undefined)).toBe(768);
     expect(parseEmbeddingDim("abc")).toBe(768);
     expect(parseEmbeddingDim("-5")).toBe(768);
+  });
+
+  it("switches reasoning off unless AI_REASONING=on", () => {
+    expect(reasoningSettings(undefined)).toEqual({ reasoning: { effort: "none", exclude: true } });
+    expect(reasoningSettings("off")).toEqual({ reasoning: { effort: "none", exclude: true } });
+    expect(reasoningSettings(" ON ")).toEqual({});
   });
 });

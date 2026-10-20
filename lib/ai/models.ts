@@ -43,12 +43,21 @@ export function parseEmbeddingDim(value: string | undefined): number {
 
 export const EMBEDDING_DIM = parseEmbeddingDim(process.env.AI_EMBEDDING_DIM);
 
+// Reasoning ("thinking") models write thousands of hidden tokens before answering: a short summary took
+// 17,000 output tokens and minutes on a free model. Every job here is plain extraction or writing from
+// the given notes, so reasoning is switched off by default (OpenRouter only). AI_REASONING=on keeps it.
+export function reasoningSettings(value = process.env.AI_REASONING) {
+  return (value ?? "").trim().toLowerCase() === "on"
+    ? {}
+    : { reasoning: { effort: "none" as const, exclude: true } };
+}
+
 // Every model handed out below is wrapped so its token usage lands in usage_logs (see usage.ts).
 function languageModel(...envNames: string[]) {
   // The first variable that is set wins (e.g. AI_MODEL_JUDGE, falling back to AI_MODEL_CHAT).
   const name = envNames.find((n) => process.env[n]) ?? envNames[envNames.length - 1];
   const id = requireEnv(name);
-  const model = providerName() === "openrouter" ? openrouter().languageModel(id) : google().languageModel(id);
+  const model = providerName() === "openrouter" ? openrouter().chat(id, reasoningSettings()) : google().languageModel(id);
   return wrapLanguageModel({ model, middleware: languageUsageMiddleware });
 }
 
