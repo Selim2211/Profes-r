@@ -18,9 +18,11 @@ describe("models", () => {
     expect(parseEmbeddingDim("-5")).toBe(768);
   });
 
-  it("switches reasoning off unless AI_REASONING=on", () => {
-    expect(reasoningSettings(undefined)).toEqual({ reasoning: { effort: "none", exclude: true } });
+  it("sends no reasoning setting unless AI_REASONING asks for one", () => {
+    expect(reasoningSettings(undefined)).toEqual({});
+    expect(reasoningSettings("")).toEqual({});
+    expect(reasoningSettings("on")).toEqual({});
+    expect(reasoningSettings(" LOW ")).toEqual({ reasoning: { effort: "low", exclude: true } });
     expect(reasoningSettings("off")).toEqual({ reasoning: { effort: "none", exclude: true } });
-    expect(reasoningSettings(" ON ")).toEqual({});
   });
 });

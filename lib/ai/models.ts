@@ -44,12 +44,19 @@ export function parseEmbeddingDim(value: string | undefined): number {
 export const EMBEDDING_DIM = parseEmbeddingDim(process.env.AI_EMBEDDING_DIM);
 
 // Reasoning ("thinking") models write thousands of hidden tokens before answering: a short summary took
-// 17,000 output tokens and minutes on a free model. Every job here is plain extraction or writing from
-// the given notes, so reasoning is switched off by default (OpenRouter only). AI_REASONING=on keeps it.
+// 17,000 output tokens and minutes on a free model. AI_REASONING lets you ask OpenRouter for less of it:
+//   (unset)  send nothing, the model's own default (always accepted)
+//   low      reasoning with low effort
+//   off      no reasoning (some models refuse this: "Reasoning is mandatory", e.g. minimax)
 export function reasoningSettings(value = process.env.AI_REASONING) {
-  return (value ?? "").trim().toLowerCase() === "on"
-    ? {}
-    : { reasoning: { effort: "none" as const, exclude: true } };
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "off":
+      return { reasoning: { effort: "none" as const, exclude: true } };
+    case "low":
+      return { reasoning: { effort: "low" as const, exclude: true } };
+    default:
+      return {};
+  }
 }
 
 // Every model handed out below is wrapped so its token usage lands in usage_logs (see usage.ts).
