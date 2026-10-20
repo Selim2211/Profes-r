@@ -54,11 +54,18 @@ function AnswerToggle({ encoded, onCitationClick }: { encoded: string } & Pick<P
   );
 }
 
-export function Markdown({ content, onCitationClick, inline = false }: Props & { inline?: boolean }) {
+export function Markdown({
+  content,
+  onCitationClick,
+  inline = false,
+  reading = false,
+}: Props & { inline?: boolean; reading?: boolean }) {
   // Inline mode (used inside a paragraph) must not emit block elements.
   const Wrapper = inline ? "span" : "div";
+  // Reading mode (summaries) uses the larger, serif-headed .reading style from globals.css.
+  const size = reading ? "reading space-y-4" : "space-y-3 text-[15px] leading-7";
   return (
-    <Wrapper className="space-y-3 text-[15px] leading-7 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3 [&_table]:block [&_table]:overflow-x-auto [&_td]:border [&_td]:px-2 [&_th]:border [&_th]:px-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold">
+    <Wrapper className={`${size} [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3 [&_table]:block [&_table]:overflow-x-auto [&_td]:border [&_td]:px-2 [&_th]:border [&_th]:px-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

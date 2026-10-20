@@ -54,9 +54,9 @@ export function DocumentRow({ id, title, status, error, pageCount, deleteAction 
   const canRun = (status === "failed" || status === "pending" || status === "processing") && !ingestingElsewhere;
 
   return (
-    <li className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border">
+    <li className="rounded-xl bg-card p-3 ring-1 ring-border">
       <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
           <FileText className="size-5" />
         </span>
         <div className="min-w-0 flex-1">

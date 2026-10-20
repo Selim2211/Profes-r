@@ -21,10 +21,10 @@ function isActive(pathname: string, href: string) {
 export function Logo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/30">
+      <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
         <GraduationCap className="size-5" />
       </span>
-      <span className="text-lg font-bold tracking-tight">Profesör</span>
+      <span className="font-heading text-xl font-semibold tracking-tight">Profesör</span>
     </div>
   );
 }
@@ -42,8 +42,8 @@ export function SideNav() {
             key={href}
             href={href}
             className={cn(
-              "flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              isActive(pathname, href) && "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
+              "flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              isActive(pathname, href) && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <Icon className="size-[18px]" />
@@ -55,8 +55,8 @@ export function SideNav() {
         <Link
           href="/settings"
           className={cn(
-            "flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-            isActive(pathname, "/settings") && "bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary",
+            "flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+            isActive(pathname, "/settings") && "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground",
           )}
         >
           <Settings className="size-[18px]" />
@@ -111,13 +111,13 @@ export function BottomNav() {
           href={href}
           className={cn(
             "flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground",
-            isActive(pathname, href) && "text-primary",
+            isActive(pathname, href) && "text-accent-foreground",
           )}
         >
           <span
             className={cn(
               "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
-              isActive(pathname, href) && "bg-primary/10",
+              isActive(pathname, href) && "bg-accent",
             )}
           >
             <Icon className="size-5" />

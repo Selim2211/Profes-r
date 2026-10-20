@@ -50,10 +50,10 @@ export function WeekSummary({ courseId, week, summaries, quickSummary, topics, h
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Hafta özeti</h2>
+        <h2 className="text-xl font-semibold">Hafta özeti</h2>
         {current && (
           <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-xl bg-muted p-1" role="tablist" aria-label="Özet seviyesi">
+            <div className="inline-flex rounded-lg bg-muted p-1" role="tablist" aria-label="Özet seviyesi">
               {available.map((l) => (
                 <button
                   key={l}
@@ -62,8 +62,8 @@ export function WeekSummary({ courseId, week, summaries, quickSummary, topics, h
                   aria-selected={level === l}
                   onClick={() => setLevel(l)}
                   className={cn(
-                    "h-8 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors",
-                    level === l && "bg-card text-foreground shadow-sm",
+                    "h-8 cursor-pointer rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors",
+                    level === l && "bg-card text-foreground shadow-xs",
                   )}
                 >
                   {LEVEL_LABELS[l]}
@@ -83,24 +83,20 @@ export function WeekSummary({ courseId, week, summaries, quickSummary, topics, h
       </div>
 
       {current ? (
-        <article className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border md:p-8">
-          <div className="max-w-none text-base leading-8">
-            <Markdown content={current.contentMd} onCitationClick={openSource} />
-          </div>
+        <article className="rounded-2xl bg-card p-5 ring-1 ring-border md:p-10">
+          <Markdown reading content={current.contentMd} onCitationClick={openSource} />
         </article>
       ) : quickSummary ? (
-        <article className="rounded-3xl bg-card p-5 shadow-sm ring-1 ring-border md:p-8">
-          <p className="mb-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Hızlı özet</p>
-          <div className="max-w-none text-base leading-8">
-            <Markdown content={quickSummary} />
-          </div>
+        <article className="rounded-2xl bg-card p-5 ring-1 ring-border md:p-10">
+          <p className="mb-3 inline-flex rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">Hızlı özet</p>
+          <Markdown reading content={quickSummary} />
         </article>
       ) : (
-        <div className="flex flex-col items-center gap-2 rounded-3xl border border-dashed bg-card/60 px-6 py-10 text-center">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed bg-card px-6 py-10 text-center">
+          <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-accent-foreground">
             <Sparkles className="size-6" />
           </span>
-          <p className="font-semibold">{hasNotes ? "Özet henüz çıkarılmadı" : "Önce bu haftaya not ekle"}</p>
+          <p className="font-heading text-xl font-semibold">{hasNotes ? "Özet henüz çıkarılmadı" : "Önce bu haftaya not ekle"}</p>
           <p className="text-sm text-muted-foreground">
             {hasNotes ? "Aşağıdan seviyeyi seçip özet çıkar." : "Dosyaları yukarıdaki alana sürükleyince özet otomatik hazırlanır."}
           </p>
@@ -113,7 +109,7 @@ export function WeekSummary({ courseId, week, summaries, quickSummary, topics, h
             <span
               key={t.name}
               title={t.description ?? undefined}
-              className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground"
+              className="rounded-md bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground"
             >
               {t.name}
             </span>
@@ -122,7 +118,7 @@ export function WeekSummary({ courseId, week, summaries, quickSummary, topics, h
       )}
 
       {hasNotes && (
-        <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
+        <div className="rounded-xl bg-card p-4 ring-1 ring-border">
           <p className="mb-3 text-sm font-medium">{current ? "Yeniden üret veya başka seviye çıkar" : "Özet çıkar"}</p>
           <SummaryLauncher key={summaries.map((s) => s.id).join()} target={{ scope: "week", courseId, weekNumber: week }} existing={existing} initialLevel={level} inline />
         </div>

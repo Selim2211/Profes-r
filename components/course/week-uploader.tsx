@@ -173,12 +173,12 @@ export function WeekUploader({ courseId, week }: { courseId: string; week: numbe
           void handleFiles(e.dataTransfer.files);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center gap-2 rounded-3xl border-2 border-dashed bg-card/60 px-6 py-10 text-center transition-colors has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50 hover:border-primary/60 hover:bg-primary/5",
-          dragging && "border-primary bg-primary/10",
+          "flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed bg-card px-6 py-10 text-center transition-colors has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50 hover:border-primary/50 hover:bg-accent/50",
+          dragging && "border-primary bg-accent",
         )}
       >
-        <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <UploadCloud className="size-7" />
+        <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+          <UploadCloud className="size-6" />
         </span>
         <span className="font-semibold">{dragging ? "Bırak, yüklensin" : "Dosyaları buraya sürükle"}</span>
         <span className="text-sm text-muted-foreground">
@@ -199,7 +199,7 @@ export function WeekUploader({ courseId, week }: { courseId: string; week: numbe
       {items.length > 0 && (
         <ul className="space-y-2" aria-live="polite">
           {items.map((item) => (
-            <li key={item.id} className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border">
+            <li key={item.id} className="rounded-xl bg-card p-3 ring-1 ring-border">
               <div className="flex items-center gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <FileText className="size-4" />
@@ -234,11 +234,11 @@ export function WeekUploader({ courseId, week }: { courseId: string; week: numbe
       )}
 
       {summary && (
-        <div className="rounded-2xl bg-primary/5 p-3 ring-1 ring-primary/20" role="status">
-          <p className="text-sm font-medium text-primary">
+        <div className="rounded-xl bg-accent p-3 ring-1 ring-border" role="status">
+          <p className="text-sm font-medium text-accent-foreground">
             {summary.label} · %{summary.value}
           </p>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-primary/10">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
             <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${summary.value}%` }} />
           </div>
         </div>

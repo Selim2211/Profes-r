@@ -18,10 +18,10 @@ export function Modal({ open, onOpenChange, title, description, children, classN
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="dialog-backdrop fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[2px]" />
+        <Dialog.Backdrop className="dialog-backdrop fixed inset-0 z-40 bg-foreground/30 backdrop-blur-[2px]" />
         <Dialog.Popup
           className={cn(
-            "dialog-popup fixed top-1/2 left-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl bg-popover p-6 text-popover-foreground shadow-2xl ring-1 ring-border outline-none",
+            "dialog-popup fixed top-1/2 left-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-popover p-6 text-popover-foreground shadow-xl ring-1 ring-border outline-none",
             className,
           )}
         >

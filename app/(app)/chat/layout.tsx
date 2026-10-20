@@ -31,7 +31,7 @@ async function ConversationList() {
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <details className="rounded-lg border px-3 py-1">
+      <details className="rounded-xl bg-card px-3 py-1 ring-1 ring-border">
         <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">Sohbet geçmişi</summary>
         <Suspense fallback={<p className="py-2 text-sm text-muted-foreground">Yükleniyor...</p>}>
           <ConversationList />

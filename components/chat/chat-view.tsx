@@ -112,7 +112,7 @@ export function ChatView({ conversationId: initialConversationId, courseId: init
           value={courseId}
           onChange={(e) => setCourseId(e.target.value)}
           disabled={locked}
-          className="h-11 min-w-0 flex-1 rounded-lg border bg-background px-3 text-sm disabled:opacity-60"
+          className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-3 text-sm disabled:opacity-60"
         >
           <option value="">Tüm dersler</option>
           {courses.map((c) => (
@@ -131,11 +131,11 @@ export function ChatView({ conversationId: initialConversationId, courseId: init
         )}
         {messages.map((m) =>
           m.role === "user" ? (
-            <div key={m.id} className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl bg-primary px-4 py-2 text-sm text-primary-foreground">
+            <div key={m.id} className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm text-primary-foreground">
               {m.content}
             </div>
           ) : (
-            <div key={m.id} className="max-w-full">
+            <div key={m.id} className="max-w-full rounded-2xl rounded-bl-md bg-card px-4 py-3 ring-1 ring-border">
               {m.content ? (
                 <Markdown content={m.content} onCitationClick={openSource} />
               ) : (
@@ -162,7 +162,7 @@ export function ChatView({ conversationId: initialConversationId, courseId: init
           rows={1}
           maxLength={4000}
           placeholder="Bir soru yaz..."
-          className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="max-h-40 min-h-11 flex-1 resize-none rounded-xl border border-input bg-card px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         />
         <Button type="submit" size="icon" className="size-11 shrink-0" disabled={busy || !input.trim()} aria-label="Gönder">
           <Send className="size-4" />

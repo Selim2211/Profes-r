@@ -126,7 +126,7 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
         >
           ← {summary.scope === "week" ? "Haftaya dön" : "Derse dön"}
         </Link>
-        <h1 className="text-2xl font-semibold">{title}</h1>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">
           {LEVEL_LABELS[summary.level]} özet · versiyon {summary.version} · {date(summary.createdAt)}
           {summary.verification?.edited ? " · düzenlendi" : ""}
@@ -164,12 +164,12 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
         <section className="space-y-2 rounded-lg border p-3 text-sm print:hidden" aria-label="Kalite göstergeleri">
           <div className="flex flex-wrap gap-2">
             {coverage && (
-              <span className="rounded-full bg-primary/10 px-3 py-1 font-medium">
+              <span className="rounded-md bg-accent px-2.5 py-1 font-medium text-accent-foreground">
                 Kapsam %{Math.round(coverage.coverage * 100)} ({coverage.coveredAfter}/{coverage.total})
               </span>
             )}
             {check && (
-              <span className="rounded-full bg-primary/10 px-3 py-1 font-medium">
+              <span className="rounded-md bg-accent px-2.5 py-1 font-medium text-accent-foreground">
                 Doğrulama: {check.claims} iddia · {check.supported} destekli
                 {check.autoVerified ? ` (${check.autoVerified} hızlı)` : ""} · {check.rewritten} düzeltildi · {check.removed} kaldırıldı
               </span>
@@ -241,8 +241,8 @@ export function SummaryView({ courseId, title, summary, versions, levels }: Prop
           </div>
         </section>
       ) : (
-        <div className="max-w-none rounded-3xl bg-card p-5 text-base leading-8 shadow-sm ring-1 ring-border md:p-8 print:rounded-none print:p-0 print:shadow-none print:ring-0">
-          <Markdown content={summary.contentMd} onCitationClick={openSource} />
+        <div className="rounded-2xl bg-card p-5 ring-1 ring-border md:p-10 print:rounded-none print:p-0 print:ring-0">
+          <Markdown reading content={summary.contentMd} onCitationClick={openSource} />
         </div>
       )}
 

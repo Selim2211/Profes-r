@@ -60,14 +60,14 @@ async function WeekContent({ params }: { params: Params }) {
           <ChevronLeft className="size-4" />
           {course.name}
         </Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
+        <h1 className="mt-1 font-heading text-3xl font-semibold tracking-tight md:text-4xl">
           {week}. Hafta
           {weekRow?.title && <span className="font-medium text-muted-foreground"> · {weekRow.title}</span>}
         </h1>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Notlar</h2>
+        <h2 className="text-xl font-semibold">Notlar</h2>
         <WeekUploader courseId={courseId} week={week} />
         {docs.length > 0 && (
           <ul className="space-y-2">
@@ -106,8 +106,8 @@ export default function WeekPage({ params }: { params: Params }) {
       fallback={
         <div className="space-y-6">
           <div className="h-10 w-56 animate-pulse rounded-xl bg-muted" />
-          <div className="h-40 animate-pulse rounded-3xl bg-muted" />
-          <div className="h-64 animate-pulse rounded-3xl bg-muted" />
+          <div className="h-40 animate-pulse rounded-2xl bg-muted" />
+          <div className="h-64 animate-pulse rounded-2xl bg-muted" />
         </div>
       }
     >

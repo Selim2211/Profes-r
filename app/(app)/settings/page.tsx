@@ -113,7 +113,7 @@ async function Usage() {
 export default function SettingsPage() {
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Ayarlar</h1>
+      <h1 className="font-heading text-3xl font-semibold tracking-tight">Ayarlar</h1>
       <Suspense fallback={<p className="text-sm text-muted-foreground">Yükleniyor...</p>}>
         <Usage />
       </Suspense>
