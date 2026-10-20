@@ -1,20 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Only for a local machine: never on Vercel and only when the request really comes from localhost,
-// so `npm run fast` (a production build run locally) can skip the login screen too.
-function canAutoLogin(request: NextRequest): boolean {
-  const host = request.nextUrl.hostname;
-  return (
-    !process.env.VERCEL &&
-    (host === "localhost" || host === "127.0.0.1") &&
-    process.env.LOCAL_AUTO_LOGIN === "true" &&
-    Boolean(process.env.LOCAL_AUTO_LOGIN_EMAIL) &&
-    Boolean(process.env.LOCAL_AUTO_LOGIN_PASSWORD)
-  );
+// There is no login screen: every visitor is signed in as one fixed account, server side, so the
+// database rules (RLS) keep working. Anyone who knows the address can use the app, so the address is
+// the only protection; the daily token budget still limits what the AI can spend.
+// AUTO_LOGIN_* is the current name; LOCAL_AUTO_LOGIN_* still works for older .env.local files.
+function autoLoginCredentials(): { email: string; password: string } | null {
+  const email = process.env.AUTO_LOGIN_EMAIL || process.env.LOCAL_AUTO_LOGIN_EMAIL;
+  const password = process.env.AUTO_LOGIN_PASSWORD || process.env.LOCAL_AUTO_LOGIN_PASSWORD;
+  return email && password ? { email, password } : null;
 }
 
-// Refreshes the Supabase session cookie and redirects unauthenticated users to /login.
+function unavailable(message: string) {
+  return new NextResponse(message, {
+    status: 503,
+    headers: { "content-type": "text/plain; charset=utf-8" },
+  });
+}
+
+// Keeps the Supabase session cookie fresh and signs the visitor in when there is no session yet.
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -40,32 +44,26 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data } = await supabase.auth.getClaims();
-  let isLoggedIn = Boolean(data?.claims);
 
-  // Local development only: sign in automatically so the login screen can be skipped.
-  // Never active on Vercel or for non-localhost hosts.
-  if (!isLoggedIn && canAutoLogin(request)) {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: process.env.LOCAL_AUTO_LOGIN_EMAIL!,
-      password: process.env.LOCAL_AUTO_LOGIN_PASSWORD!,
-    });
-    isLoggedIn = !error;
+  if (!data?.claims) {
+    const credentials = autoLoginCredentials();
+    if (!credentials) {
+      return unavailable("Otomatik giriş ayarlanmamış. AUTO_LOGIN_EMAIL ve AUTO_LOGIN_PASSWORD ortam değişkenlerini ekle.");
+    }
+    const { error } = await supabase.auth.signInWithPassword(credentials);
+    if (error) {
+      return unavailable("Otomatik giriş başarısız. AUTO_LOGIN_EMAIL ve AUTO_LOGIN_PASSWORD değerlerini kontrol et.");
+    }
   }
 
-  const isLoginPage = request.nextUrl.pathname.startsWith("/login");
-
-  if (!isLoggedIn && !isLoginPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-
-  if (isLoggedIn && isLoginPage) {
+  // The old login address now just leads to the app.
+  if (request.nextUrl.pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
-    return NextResponse.redirect(url);
+    const redirect = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
   }
 
   return response;

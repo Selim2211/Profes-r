@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, GraduationCap, Home, LogOut, MessageCircle, Settings } from "lucide-react";
-import { signOut } from "@/app/(auth)/login/actions";
+import { BookOpen, GraduationCap, Home, MessageCircle, Settings } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -62,18 +61,7 @@ export function SideNav() {
           <Settings className="size-[18px]" />
           Ayarlar ve kullanım
         </Link>
-        <div className="flex items-center justify-between">
-          <ThemeToggle />
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <LogOut className="size-4" />
-              Çıkış
-            </button>
-          </form>
-        </div>
+        <ThemeToggle />
       </div>
     </aside>
   );
@@ -85,18 +73,7 @@ export function TopBar() {
       <Link href="/">
         <Logo />
       </Link>
-      <div className="flex items-center">
-        <ThemeToggle />
-        <form action={signOut}>
-          <button
-            type="submit"
-            aria-label="Çıkış"
-            className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
-          >
-            <LogOut className="size-4" />
-          </button>
-        </form>
-      </div>
+      <ThemeToggle />
     </header>
   );
 }

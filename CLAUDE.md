@@ -134,7 +134,7 @@ Hazır araçlar "PDF'den soru-cevap" yapar. Bu projenin farkı **öğrenciyi tan
 
 ```
 /app
-  /(auth)/login/page.tsx
+  (giriş sayfası kaldırıldı, 2026-10-20: sunucu tarafı otomatik giriş, bkz. Karar Günlüğü)
   /(app)/layout.tsx                 # Giriş kontrolü, alt navigasyon (mobil) / yan menü (masaüstü)
   /(app)/page.tsx                   # Ana panel: dersler, bugünkü tekrarlar, yaklaşan sınavlar
   /(app)/courses/page.tsx
@@ -826,3 +826,4 @@ Bu dosyadaki bir kararı değiştirmek gerekirse, kullanıcının onayından son
 | 2026-10-19 | Proje özet odaklı hale getirildi. Faz 4 "Kaliteli Özet Hattı" olarak yeniden tanımlandı. Faz 5 (Quiz), Faz 6 (Hafıza), Faz 7 (Aralıklı tekrar ve sınav planı) ERTELENDİ. Faz 8 (PWA, cila, yayın) korunuyor. | Projenin asıl amacı yüklenen notların doğru, eksiksiz ve düzenli özetini çıkarmak | Kullanıcı |
 | 2026-10-20 | Ders yapısı hafta merkezli: kullanıcı önce hafta oluşturur, notları (birden fazla dosya, sürükle-bırak) o haftaya yükler; "Not yükle" sayfası kalktı. Hafta özeti bir kez üretilince veritabanında kalır ve hafta sayfasında doğrudan görünür. Özet iddia-iddia doğrulaması varsayılan olarak KAPALI (çok yavaş); isteğe bağlı gelişmiş seçenek olarak kalır. Arayüz baştan tasarlandı (modern, açılır pencereler). Hız önceliği: yerelde üretim modu (`npm run fast`), gereksiz sorgu/yükleme azaltma. | Kullanıcı: doğrulama çok uzun sürüyor, site yavaş ve karışık | Kullanıcı |
 | 2026-10-20 | Tasarım dili "ders defteri" olarak değişti: sıcak kâğıt zemin, lacivert mürekkep vurgusu, başlıklarda Newsreader (serif), arayüzde Inter, ders başına yumuşak renk şeridi ve baş harf rozeti, uzun metinler için `.reading` okuma stili (70 karakter genişlik). Önceki indigo/gradyan tasarım kaldırıldı. | Kullanıcı: önceki tasarımı beğenmedi, ders için daha düzgün ve modern istedi | Kullanıcı |
+| 2026-10-20 | Giriş (login) ekranı ve çıkış düğmesi tamamen kaldırıldı. Her ziyaretçi, `AUTO_LOGIN_EMAIL` / `AUTO_LOGIN_PASSWORD` ortam değişkenlerindeki tek hesapla sunucu tarafında otomatik giriş yapar (yerelde ve Vercel'de); böylece RLS çalışmaya devam eder. Uyarı: adresi bilen herkes uygulamayı kullanabilir ve verileri görebilir/silebilir; tek koruma adresin bilinmemesi ve günlük token bütçesidir. | Kullanıcı: giriş ekranı istemiyor | Kullanıcı |
