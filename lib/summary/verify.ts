@@ -3,7 +3,9 @@ import { generateStructured } from "@/lib/ai/structured";
 import { judgeModel } from "@/lib/ai/models";
 import { CLAIM_JUDGE_PROMPT } from "@/lib/ai/prompts";
 import { claimJudgeSchema } from "@/lib/ai/schemas";
+import { embeddingsEnabled } from "@/lib/ai/models";
 import { embedTexts } from "@/lib/ingest/embed";
+import { buildOrQuery } from "@/lib/rag/text-query";
 import { citationLabel, type NoteHit } from "@/lib/rag/search";
 import { withRetry } from "@/lib/utils/retry";
 import { applyVerdicts, parseClaims, plainText, rewriteKeepsShape, type Claim, type Verdict } from "./claims";
@@ -235,16 +237,26 @@ async function inGroups<T, R>(items: T[], size: number, run: (item: T) => Promis
 export function createEvidenceFinder(supabase: SupabaseClient, scope: SummaryScope, weekNumber: number | null) {
   return async (claims: Claim[]): Promise<Evidence[][]> => {
     const queries = claims.map((c) => plainText(c.text));
-    const embeddings = await embedTexts(queries);
+    // With embeddings off the evidence comes from full-text search only.
+    const useVectors = embeddingsEnabled();
+    const embeddings = useVectors ? await embedTexts(queries) : [];
 
     return inGroups(claims.map((_, i) => i), SEARCH_CONCURRENCY, async (i) => {
-      const { data, error } = await supabase.rpc("match_chunks", {
-        query_embedding: JSON.stringify(embeddings[i]),
-        query_text: queries[i],
-        p_course_id: scope.courseId,
-        p_weeks: scope.scope === "week" ? [scope.weekNumber] : weekNumber !== null ? [weekNumber] : null,
-        match_count: SEARCH_CANDIDATES,
-      });
+      const p_weeks = scope.scope === "week" ? [scope.weekNumber] : weekNumber !== null ? [weekNumber] : null;
+      const { data, error } = useVectors
+        ? await supabase.rpc("match_chunks", {
+            query_embedding: JSON.stringify(embeddings[i]),
+            query_text: queries[i],
+            p_course_id: scope.courseId,
+            p_weeks,
+            match_count: SEARCH_CANDIDATES,
+          })
+        : await supabase.rpc("match_chunks_text", {
+            query_text: buildOrQuery(queries[i]) || "x:*",
+            p_course_id: scope.courseId,
+            p_weeks,
+            match_count: SEARCH_CANDIDATES,
+          });
       if (error) throw new Error(error.message);
 
       const hits = (data ?? []) as Evidence[];

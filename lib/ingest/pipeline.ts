@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { chunkPages } from "./chunk";
 import { cleanPages, type PageText } from "./clean";
+import { embeddingsEnabled } from "@/lib/ai/models";
 import { cosineSimilarity, embedTexts } from "./embed";
 import {
   MIN_TEXT_CHARS,
@@ -190,7 +191,8 @@ async function runEmbed(supabase: SupabaseClient, job: Job, doc: Doc) {
 
   const cursor = job.next_page;
   const slice = chunks.slice(cursor, cursor + EMBED_SLICE_CHUNKS);
-  const embeddings = await embedTexts(slice.map((c) => c.content));
+  // With embeddings off the chunks are stored without a vector (they are found by full-text search).
+  const embeddings = embeddingsEnabled() ? await embedTexts(slice.map((c) => c.content)) : null;
 
   const { error } = await supabase.from("chunks").upsert(
     slice.map((c, i) => ({
@@ -204,7 +206,7 @@ async function runEmbed(supabase: SupabaseClient, job: Job, doc: Doc) {
       heading: c.heading,
       content: c.content,
       token_count: c.tokenCount,
-      embedding: JSON.stringify(embeddings[i]),
+      embedding: embeddings ? JSON.stringify(embeddings[i]) : null,
     })),
     { onConflict: "document_id,chunk_index" },
   );
@@ -262,10 +264,12 @@ async function runSummarize(supabase: SupabaseClient, job: Job, doc: Doc) {
     .select("id, name, description");
   if (topicError) throw new Error(topicError.message);
 
-  // Link each chunk of this document to its most similar topics.
-  const topicVectors = await embedTexts((topics ?? []).map((t) => `${t.name}: ${t.description ?? ""}`));
+  // Link each chunk of this document to its most similar topics (needs embeddings; skipped when off).
+  const linkable = embeddingsEnabled() ? chunks.filter((c) => c.document_id === doc.id && c.embedding) : [];
+  const topicVectors =
+    linkable.length > 0 ? await embedTexts((topics ?? []).map((t) => `${t.name}: ${t.description ?? ""}`)) : [];
   const links: { chunk_id: string; topic_id: string }[] = [];
-  for (const chunk of chunks.filter((c) => c.document_id === doc.id)) {
+  for (const chunk of linkable) {
     const vector: number[] = typeof chunk.embedding === "string" ? JSON.parse(chunk.embedding) : chunk.embedding;
     (topics ?? [])
       .map((t, i) => ({ id: t.id, score: cosineSimilarity(vector, topicVectors[i]) }))

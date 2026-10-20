@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { embeddingsEnabled } from "@/lib/ai/models";
 import { embedTexts } from "@/lib/ingest/embed";
+import { buildOrQuery } from "./text-query";
 
 export const MATCH_COUNT = 8;
 
@@ -38,17 +40,33 @@ export function toCitation(hit: NoteHit): Citation {
   };
 }
 
-// Hybrid (vector + full text) search over the user's notes via the match_chunks RPC.
+// Hybrid (vector + full text) search over the user's notes via the match_chunks RPC. With embeddings
+// off (AI_EMBEDDINGS=off) it is full-text only (match_chunks_text).
 export async function searchNotes(
   supabase: SupabaseClient,
   params: { query: string; courseId?: string | null; weeks?: number[] | null },
 ): Promise<NoteHit[]> {
+  const weeks = params.weeks?.length ? params.weeks : null;
+
+  if (!embeddingsEnabled()) {
+    const query = buildOrQuery(params.query);
+    if (!query) return [];
+    const { data, error } = await supabase.rpc("match_chunks_text", {
+      query_text: query,
+      p_course_id: params.courseId ?? null,
+      p_weeks: weeks,
+      match_count: MATCH_COUNT,
+    });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as NoteHit[];
+  }
+
   const [embedding] = await embedTexts([params.query]);
   const { data, error } = await supabase.rpc("match_chunks", {
     query_embedding: JSON.stringify(embedding),
     query_text: params.query,
     p_course_id: params.courseId ?? null,
-    p_weeks: params.weeks?.length ? params.weeks : null,
+    p_weeks: weeks,
     match_count: MATCH_COUNT,
   });
   if (error) throw new Error(error.message);

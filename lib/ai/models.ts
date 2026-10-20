@@ -60,6 +60,12 @@ export function judgeModel() {
   return languageModel("AI_MODEL_JUDGE", "AI_MODEL_CHAT");
 }
 
+// AI_EMBEDDINGS=off runs the app without vectors: nothing is embedded and notes are found with full-text
+// search only (summaries do not need embeddings at all). Any other value keeps embeddings on.
+export function embeddingsEnabled(): boolean {
+  return (process.env.AI_EMBEDDINGS ?? "").trim().toLowerCase() !== "off";
+}
+
 // Embeddings are always requested at EMBEDDING_DIM (pgvector columns are vector(768)).
 export function embeddingModel() {
   const id = requireEnv("AI_MODEL_EMBEDDING");

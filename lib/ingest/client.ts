@@ -7,7 +7,7 @@ export type IngestProgress = {
 export const STAGE_LABELS: Record<string, string> = {
   extract: "Metin çıkarılıyor",
   chunk: "Parçalanıyor",
-  embed: "Vektörler hesaplanıyor",
+  embed: "Parçalar kaydediliyor",
   summarize: "Özet hazırlanıyor",
   done: "Hazır",
   failed: "Başarısız",
