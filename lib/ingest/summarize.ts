@@ -3,7 +3,9 @@ import { fastModel } from "@/lib/ai/models";
 import { WEEK_SUMMARY_PROMPT } from "@/lib/ai/prompts";
 import { weekSummarySchema, type WeekSummary } from "@/lib/ai/schemas";
 
-const MAX_INPUT_CHARS = 60_000;
+// The overview made at upload time only needs a sample of the notes (the full summary reads everything), and a
+// smaller input keeps the model's work, and the wait, short.
+const MAX_INPUT_CHARS = 20_000;
 
 // Keeps the input within budget by sampling evenly across the notes instead of cutting off the end.
 export function fitToBudget(parts: string[], maxChars = MAX_INPUT_CHARS): string {

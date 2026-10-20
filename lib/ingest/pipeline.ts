@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { chunkPages } from "./chunk";
 import { cleanPages, type PageText } from "./clean";
 import { embeddingsEnabled } from "@/lib/ai/models";
+import type { WeekSummary } from "@/lib/ai/schemas";
 import { cosineSimilarity, embedTexts } from "./embed";
 import {
   MIN_TEXT_CHARS,
@@ -246,12 +247,30 @@ async function runSummarize(supabase: SupabaseClient, job: Job, doc: Doc) {
   if (error) throw new Error(error.message);
   if (!chunks?.length) fail("Özet için parça bulunamadı.");
 
-  const summary = await summarizeWeek({
-    courseName: course?.name ?? "",
-    weekNumber: doc.week_number,
-    chunkTexts: chunks.map((c) => c.content),
-  });
+  // The overview (week title, topics, short summary) is a bonus: the notes are already stored and searchable.
+  // If the model fails or is slow to answer, the document still becomes ready; the full summary can be made later.
+  let summary: WeekSummary | null = null;
+  try {
+    summary = await summarizeWeek({
+      courseName: course?.name ?? "",
+      weekNumber: doc.week_number,
+      chunkTexts: chunks.map((c) => c.content),
+    });
+  } catch (error) {
+    console.error("Week overview could not be written:", error instanceof Error ? error.message : error);
+  }
+  if (summary) await saveOverview(supabase, doc, chunks, summary);
 
+  await setJob(supabase, job, { stage: "done", progress: 100 });
+  await supabase.from("documents").update({ status: "ready", error: null }).eq("id", doc.id);
+}
+
+async function saveOverview(
+  supabase: SupabaseClient,
+  doc: Doc,
+  chunks: { id: string; document_id: string; content: string; embedding: unknown }[],
+  summary: WeekSummary,
+) {
   const { data: topics, error: topicError } = await supabase
     .from("topics")
     .upsert(
@@ -307,9 +326,6 @@ async function runSummarize(supabase: SupabaseClient, job: Job, doc: Doc) {
     );
     if (weekError) throw new Error(weekError.message);
   }
-
-  await setJob(supabase, job, { stage: "done", progress: 100 });
-  await supabase.from("documents").update({ status: "ready", error: null }).eq("id", doc.id);
 }
 
 function currentStage(job: Job): Stage {
