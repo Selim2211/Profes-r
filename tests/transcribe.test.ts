@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectTranscribeNeed, validateTranscription } from "@/lib/ingest/transcribe";
+import { detectTranscribeNeed, needsAutoTranscribe, validateTranscription } from "@/lib/ingest/transcribe";
 
 const TABLE_PAGE = `Information Systems in Organizations
 The table below shows a small list of information systems you can find in a
@@ -74,5 +74,34 @@ describe("validateTranscription", () => {
   it("rejects output far longer than the page could contain", () => {
     const longOriginal = "kelime ".repeat(60);
     expect(validateTranscription(longOriginal, "kelime ".repeat(500))).toBeNull();
+  });
+});
+
+describe("needsAutoTranscribe", () => {
+  const slide = "Value based management\nKey drivers\nCash flow\nGrowth\nMargins\nRisk\nCost of capital";
+  const withEnv = (value: string | undefined, run: () => void) => {
+    const previous = process.env.AI_AUTO_TRANSCRIBE;
+    try {
+      if (value === undefined) delete process.env.AI_AUTO_TRANSCRIBE;
+      else process.env.AI_AUTO_TRANSCRIBE = value;
+      run();
+    } finally {
+      if (previous === undefined) delete process.env.AI_AUTO_TRANSCRIBE;
+      else process.env.AI_AUTO_TRANSCRIBE = previous;
+    }
+  };
+
+  it("does not send a slide page to the vision model by default", () => {
+    expect(detectTranscribeNeed(slide).needed).toBe(true); // the check itself still flags it
+    withEnv(undefined, () => expect(needsAutoTranscribe(detectTranscribeNeed(slide))).toBe(false));
+  });
+
+  it("sends it when AI_AUTO_TRANSCRIBE=on", () => {
+    withEnv("on", () => expect(needsAutoTranscribe(detectTranscribeNeed(slide))).toBe(true));
+  });
+
+  it("always sends a page whose text layer is garbled", () => {
+    const garbled = "a b c d e f g h i j k l m n o p q r s t u v w x y z ".repeat(2);
+    withEnv(undefined, () => expect(needsAutoTranscribe(detectTranscribeNeed(garbled))).toBe(true));
   });
 });

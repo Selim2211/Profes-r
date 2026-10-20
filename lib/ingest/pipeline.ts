@@ -10,7 +10,7 @@ import {
   splitTextIntoPages,
 } from "./extract";
 import { transcribePages } from "./ocr";
-import { detectTranscribeNeed, validateTranscription } from "./transcribe";
+import { detectTranscribeNeed, needsAutoTranscribe, validateTranscription } from "./transcribe";
 import { summarizeWeek } from "./summarize";
 
 // A slice may include one vision call, and that call sends the whole PDF to the model whatever the number
@@ -124,8 +124,9 @@ async function runExtract(supabase: SupabaseClient, job: Job, doc: Doc) {
     for (const p of todo) {
       const empty = p.text.trim().length < MIN_TEXT_CHARS;
       const need = detectTranscribeNeed(p.text);
-      if (empty || need.needed || doc.transcribe_all) {
-        plan.set(p.page, { empty, reasons: empty ? ["empty"] : need.needed ? need.reasons : ["all"] });
+      const auto = needsAutoTranscribe(need);
+      if (empty || auto || doc.transcribe_all) {
+        plan.set(p.page, { empty, reasons: empty ? ["empty"] : auto ? need.reasons : ["all"] });
       }
     }
   }

@@ -48,6 +48,18 @@ function looksGarbled(text: string): boolean {
   return single / tokens.length > 0.3;
 }
 
+// Reading a page with the vision model is slow (and uses model quota), and slide decks trip the table/diagram
+// checks on almost every page. So by default only pages whose text layer is broken ("garbled") are read
+// automatically (pages without any text are always read); tables, formulas and diagrams are read on demand
+// with "Görselle aktar". AI_AUTO_TRANSCRIBE=on restores the automatic table/math/diagram checks.
+export function autoTranscribeEnabled(): boolean {
+  return (process.env.AI_AUTO_TRANSCRIBE ?? "").trim().toLowerCase() === "on";
+}
+
+export function needsAutoTranscribe(need: TranscribeNeed): boolean {
+  return autoTranscribeEnabled() ? need.needed : need.reasons.includes("garbled");
+}
+
 // Cheap, conservative text-based checks; false positives only cost one extra vision call.
 export function detectTranscribeNeed(text: string): TranscribeNeed {
   const lines = lineList(text);
